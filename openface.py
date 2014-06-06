@@ -57,42 +57,65 @@ def hand_evaluator(hand):
         return ("Two Pair",3)
     elif len([x for x,y in Counter([card[:-1] for card in hand]).items() if y == 2]) == 1:
         return ("Pair",2)
-    else: return ("Hi card",1)
+    else: return ("Hi-card",1)
 
-def single_player():
+def single_player_openface():
     front = []
     middle = []
     back = []
 
     player1_hand = random_hand()
-    print "Your starting hand is " + "".join(player1_hand)
+    print "Your starting hand is " + " ".join(player1_hand)
 
+    # Prompt user for placement of initial starting hand
     for card in player1_hand:
         place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
+
         print "Your starting hand was " + "".join(player1_hand)
 
-        if place == "F" and len(front)<3: front.append(card)
-        elif place =="M" and len(middle)<5: middle.append(card)
-        elif place == "B" and len(back)<5: back.append(card)
+        if place.lower() == "f" and len(front)<3: front.append(card)
+        elif place.lower() =="m" and len(middle)<5: middle.append(card)
+        elif place.lower() == "b" and len(back)<5: back.append(card)
 
-        print "".join(front) + "\n" + "".join(middle) + "\n" + "".join(back)
+        # Error Handling
+        while place.lower() not in ("f", "m", "b") or \
+        (front.count(card) == 0 and middle.count(card)==0 and back.count(card)==0): 
 
+            place = raw_input("Please enter F, M or B: ")
+
+            if place.lower() == "f" and len(front)<3: front.append(card)
+            elif place.lower() =="m" and len(middle)<5: middle.append(card)
+            elif place.lower() == "b" and len(back)<5: back.append(card)
+
+        print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+
+    # Prompt user for placement of subsequent draws until hand is complete
     while len(front) + len(middle) + len(back) < 13:
-        remaining_deck = [x for x in create_deck() if x not in front or x not in middle or x not in back]
-        draw = remaining_deck[randrange(0,len(remaining_deck))]
+        remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back]
+        card = remaining_deck[randrange(0,len(remaining_deck))]
 
-        place = raw_input("Where do you want to place " + str(draw) + " : F, M or B? ")
+        place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
 
-        if place == "F" and len(front)<3: front.append(draw)
-        elif place =="M" and len(middle)<5: middle.append(draw)
-        elif place == "B" and len(back)<5: back.append(draw)
+        if place.lower() == "f" and len(front)<3: front.append(card)
+        elif place.lower() =="m" and len(middle)<5: middle.append(card)
+        elif place.lower() == "b" and len(back)<5: back.append(card)
         
-        print "".join(front) + "\n" + "".join(middle) + "\n" + "".join(back)
+        # Error Handling
+        while place.lower() not in ("f", "m", "b") or \
+        (front.count(card) == 0 and middle.count(card)==0 and back.count(card)==0):  
+
+            place = raw_input("Please enter F, M or B: ")
+
+            if place.lower() == "f" and len(front)<3: front.append(card)
+            elif place.lower() =="m" and len(middle)<5: middle.append(card)
+            elif place.lower() == "b" and len(back)<5: back.append(card)
+
+        print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
     print "--------------------FINAL HAND--------------------"    
-    print "".join(front) + " " + hand_evaluator(front)[0]
-    print "".join(middle) + " " + hand_evaluator(middle)[0]
-    print "".join(back) + " " + hand_evaluator(back)[0]
+    print " ".join(front) + " " + hand_evaluator(front)[0]
+    print " ".join(middle) + " " + hand_evaluator(middle)[0]
+    print " ".join(back) + " " + hand_evaluator(back)[0]
 
-single_player()
+single_player_openface()
 
