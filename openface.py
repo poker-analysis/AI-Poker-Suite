@@ -59,6 +59,34 @@ def hand_evaluator(hand):
         return ("Pair",2)
     else: return ("Hi-card",1)
 
+def hand_comparison(hand1,hand2):
+    hand1_name = hand_evaluator(hand1)[0]
+    hand1_strength = hand_evaluator(hand1)[1]
+    hand2_strength = hand_evaluator(hand2)[1]
+
+    # Compare hand1/hand2 and resolve tiebreaks
+    if hand1_strength > hand2_strength: return True
+    elif hand1_strength < hand2_strength: return False
+    
+    else:
+        if hand1_name == "Royal Flush": return "Tie"
+        elif hand1_name == "Straight Flush": pass
+        elif hand1_name == "Quads": pass
+        elif hand1_name == "Full House": pass
+        elif hand1_name == "Flush": pass
+        elif hand1_name == "Straight": pass
+        elif hand1_name == "Trips": pass
+        elif hand1_name == "Two Pair": pass
+        elif hand1_name == "Pair": pass
+        elif hand1_name == "Hi-card": pass
+
+def foul(front, middle, back):
+    # return True if hand is fouled, false otherwise
+    if hand_comparison(front,middle) == True: return True
+    elif hand_comparison(front,back) == True: return True
+    elif hand_comparison(middle,back) == True: return True
+    else: return False
+    
 def single_player_openface():
     front = []
     middle = []
