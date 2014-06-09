@@ -107,6 +107,46 @@ def foul(front, middle, back):
     if hand_comparison(front,middle) == True or hand_comparison(front,back) == True \
     or hand_comparison(middle,back) == True: return True
     else: return False
+
+def ai_dominant_start(hand):
+    # How the computer should place the top 7.618544 % of its opening range
+    front = []
+    middle = []
+    back = []
+    hand_indices = [values.index(x[:-1])+1 for x in hand]
+    hand_pairs = [x for x,y in Counter(hand_indices).items() if y == 2]
+    
+    # If you draw lucky (Straight +), place the hand in the back
+    if hand_evaluator(hand)[1] > 4:
+        back.append(hand)
+
+    # If you draw trips, place trips + smallest of remainders in the back
+    elif hand_evaluator(hand)[0] == "Trips":
+        trip_value = max(set(hand_indices), key=hand_indices.count)
+        for card in hand:
+            if hand_indices.count(values.index(card[:-1])+1)==3:
+                back.append(card)
+        # Place weakest value in the back to draw to a full house
+        remainder = [values.index(card[:-1]) for card in hand if back.count(card) == 0]
+        for card in hand:
+            if values.index(card[:-1]) == min(remainder): 
+                back.append(card)
+            elif back.count(card) == 0 and values.index(card[:-1])<7:
+                front.append(card)
+            elif back.count(card) == 0:
+                middle.append(card)
+
+    # Place the fifth card on the front if it is weak, middle if it is strong
+    elif hand_evaluator(hand)[0] == "Two Pair":
+        for card in hand: 
+            if hand_indices.count(values.index(card[:-1])+1)>1:
+                back.append(card)
+        for card in hand:
+            if back.count(card) == 0 and values.index(card[:-1])>=7:
+                middle.append(card)
+            else: front.append(card)
+
+    return front, middle, back
     
 def single_player_openface():
     front = []
@@ -115,8 +155,9 @@ def single_player_openface():
 
     player1_hand = random_hand()
     print "Your starting hand is " + " ".join(player1_hand)
-
     # Prompt user for placement of initial starting hand
+    # Button placement, while statement until the user ends session
+    # If CPU has button, then play. If human has button, you play first.
     for card in player1_hand:
         place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
 
