@@ -33,6 +33,12 @@ def flush_check(hand):
         if "".join(hand).count(suit) == 5: return True
     else: return False  
 
+def flush_draw_check(hand):
+    for suit in suits:
+        if "".join(hand).count(suit) == 3 or "".join(hand).count(suit) == 4:
+            return True,suit
+    else: return False
+
 def fullhouse_check(hand):
     pairs = []
     for x in values: 
@@ -82,7 +88,7 @@ def hand_comparison(hand1,hand2):
         elif hand1_name == "Straight Flush" or hand1_name == "Straight":
             return sorted(h1_indices)[0] > sorted(h2_indices)[0] 
         elif hand1_name == "Quads" or hand1_name == "Full House" or hand1_name == "Trips":
-            return values.index(str(h1_common)) > values.index(str(h2_common))
+            return h1_common > h2_common
         elif hand1_name == "Flush" or hand1_name == "Hi-card":
             return sorted(h1_indices)[::-1] > sorted(h2_indices)[::-1]
         elif hand1_name == "Two Pair":
@@ -97,24 +103,27 @@ def hand_comparison(hand1,hand2):
                 return h1_common > h2_common
 
         elif hand1_name == "Pair":
-            if values.index(str(h1_common)) == values.index(str(h2_common)):
+            if h1_common == h2_common:
                 return sorted(h1_indices)[::-1] > sorted(h2_indices)[::-1]
             else: 
-                return values.index(h1_common) > values.index(h2_common)
+                return h1_common > h2_common
 
-def foul(front, middle, back):
+def is_foul(front, middle, back):
     # return True if hand is fouled, False otherwise
     if hand_comparison(front,middle) == True or hand_comparison(front,back) == True \
     or hand_comparison(middle,back) == True: return True
     else: return False
 
-def ai_dominant_start(hand):
+def ai_starting_hand(hand):
+    # Breakdown:
     # How the computer should place the top 7.618544 % of its opening range
+    # How the computer should place the rest of its range (draws, garbage, etc.)
     front = []
     middle = []
     back = []
     hand_indices = [values.index(x[:-1])+1 for x in hand]
     hand_pairs = [x for x,y in Counter(hand_indices).items() if y == 2]
+
     
     # If you draw lucky (Straight +), place the hand in the back
     if hand_evaluator(hand)[1] > 4:
@@ -146,12 +155,22 @@ def ai_dominant_start(hand):
                 middle.append(card)
             else: front.append(card)
 
+    # If the computer has flush draws (3 card, 4 card), place in the back
+    elif flush_draw_check(hand)[0] == True:
+        for card in hand: 
+            if card[-1:] == flush_draw_check(hand)[1]:
+                back.append(card)
+            elif values.index(card[:-1])>=7:
+                middle.append(card)
+            else: front.append(card)
+
     return front, middle, back
-    
+
 def single_player_openface():
     front = []
     middle = []
     back = []
+    overall_hand = [front,middle,back]
 
     player1_hand = random_hand()
     print "Your starting hand is " + " ".join(player1_hand)
@@ -184,21 +203,42 @@ def single_player_openface():
         remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back]
         draw = remaining_deck[randrange(0,len(remaining_deck))]
 
+        # Provide user with the odds that they will foul for the sweat
+        if len(front) + len(middle) + len(back) == 12:
+            potential_fouls = 0
+            for card in remaining_deck:
+                if len(front) < 3:
+                    front.append(card)
+                elif len(middle) < 5:
+                    middle.append(card)
+                elif len(back) < 5:
+                    back.append(card)
+                if is_foul(front,middle,back)==True:
+                    potential_fouls +=1
+                if front.count(card) > 0: front.remove(card)
+                elif middle.count(card) > 0: middle.remove(card)
+                elif back.count(card) > 0: back.remove(card)
+
+
+            print potential_fouls,len(remaining_deck)
+            print "You have a %f percent chance of fouling your hand!" % (100.0*potential_fouls/len(remaining_deck))
+
         place = raw_input("Where do you want to place " + str(draw) + " : F, M or B? ")
 
         if place.lower() == "f" and len(front)<3: front.append(draw)
         elif place.lower() =="m" and len(middle)<5: middle.append(draw)
         elif place.lower() == "b" and len(back)<5: back.append(draw)
         
-        # Error Handling
         while place.lower() not in ("f", "m", "b") or \
         (front.count(draw) == 0 and middle.count(draw)==0 and back.count(draw)==0):  
-
+            print front,middle,back
             place = raw_input("Please enter F, M or B: ")
 
             if place.lower() == "f" and len(front)<3: front.append(draw)
             elif place.lower() =="m" and len(middle)<5: middle.append(draw)
             elif place.lower() == "b" and len(back)<5: back.append(draw)
+
+            # DEBUG: Debugging print statements
 
         print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
@@ -207,6 +247,7 @@ def single_player_openface():
     print " ".join(front) + "       | " + hand_evaluator(front)[0]
     print " ".join(middle) + " | " + hand_evaluator(middle)[0]
     print " ".join(back) + " | " + hand_evaluator(back)[0]
-    if foul(front,middle,back) == True: print "You fouled!"
+    if is_foul(front,middle,back) == True: print "You fouled!"
 
 single_player_openface()
+
