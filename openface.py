@@ -1,5 +1,6 @@
 from random import randrange
 from collections import Counter 
+from itertools import combinations
 
 # global variables
 suits = ["s","h","d","c"]
@@ -125,11 +126,11 @@ def ai_starting_hand(hand):
     hand_pairs = [x for x,y in Counter(hand_indices).items() if y == 2]
 
     
-    # If you draw lucky (Straight +), place the hand in the back
+    # If cpu draw lucky (Straight +), place the hand in the back
     if hand_evaluator(hand)[1] > 4:
         back.append(hand)
 
-    # If you draw trips, place trips + smallest of remainders in the back
+    # If cpu draw trips, place trips + smallest of remainders in the back
     elif hand_evaluator(hand)[0] == "Trips":
         trip_value = max(set(hand_indices), key=hand_indices.count)
         for card in hand:
@@ -165,6 +166,44 @@ def ai_starting_hand(hand):
             else: front.append(card)
 
     return front, middle, back
+
+def greedy_chinese_algorithm(front,middle,back):
+    # Output best hand user could have created (with perfect information)
+    greedy_front = []
+    greedy_middle = []
+    greedy_back = []
+
+    new_deck = front + middle + back
+    best = 0
+    best_hand = []  
+    for candidate in list(combinations(new_deck,5)):
+        if hand_evaluator(candidate)[1] > best or hand_comparison(candidate,best_hand)==True:
+            best = hand_evaluator(candidate)[1]
+            best_hand = candidate
+
+    greedy_back.extend(best_hand)
+
+    for y in greedy_back: 
+        new_deck.remove(y)
+
+    best = 0 
+    best_hand = []
+
+    for candidate in list(combinations(new_deck,5)):
+        if hand_evaluator(candidate)[1] > best or hand_comparison(candidate,best_hand)==True:
+            best = hand_evaluator(candidate)[1]
+            best_hand = candidate
+    greedy_middle.extend(best_hand)
+
+    for y in greedy_middle:
+        new_deck.remove(y)
+
+    greedy_front.extend(new_deck)
+
+    print " ".join(greedy_front) + "       | " + hand_evaluator(greedy_front)[0]
+    print " ".join(greedy_middle) + " | " + hand_evaluator(greedy_middle)[0]
+    print " ".join(greedy_back) + " | " + hand_evaluator(greedy_back)[0]
+
 
 def single_player_openface():
     front = []
@@ -207,14 +246,14 @@ def single_player_openface():
         if len(front) + len(middle) + len(back) == 12:
             potential_fouls = 0
             for card in remaining_deck:
-                if len(front) < 3:
-                    front.append(card)
-                elif len(middle) < 5:
-                    middle.append(card)
-                elif len(back) < 5:
-                    back.append(card)
+
+                if len(front) < 3: front.append(card)
+                elif len(middle) < 5: middle.append(card)
+                elif len(back) < 5: back.append(card)
+
                 if is_foul(front,middle,back)==True:
                     potential_fouls +=1
+
                 if front.count(card) > 0: front.remove(card)
                 elif middle.count(card) > 0: middle.remove(card)
                 elif back.count(card) > 0: back.remove(card)
@@ -238,8 +277,6 @@ def single_player_openface():
             elif place.lower() =="m" and len(middle)<5: middle.append(draw)
             elif place.lower() == "b" and len(back)<5: back.append(draw)
 
-            # DEBUG: Debugging print statements
-
         print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
     # Returning final hand, foul information, and hand evaluation to user
@@ -248,6 +285,8 @@ def single_player_openface():
     print " ".join(middle) + " | " + hand_evaluator(middle)[0]
     print " ".join(back) + " | " + hand_evaluator(back)[0]
     if is_foul(front,middle,back) == True: print "You fouled!"
+    print "------------------GREEDY CHINESE------------------"
+    greedy_chinese_algorithm(front,middle,back)
 
 single_player_openface()
 
