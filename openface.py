@@ -24,10 +24,19 @@ def random_hand():
 
 def straight_check(hand):
     indices = [values.index(x[:-1])+1 for x in hand]
-    if sorted([x[:-1] for x in hand]) == ["2","3","4","5","A"]: return True
+    if len(indices)!=len(set(indices)): return False
     elif len(hand) < 5: return False
+    elif sorted([x[:-1] for x in hand]) == ["2","3","4","5","A"]: return True
     elif 5*min(indices)+10 == sum(indices): return True
     else: return False 
+
+def openended_draw_check(hand):
+    indices = sorted([values.index(x[:-1])+1 for x in hand])
+    if sum(indices[1:])==4*min(indices[1:])+6:
+        return True,hand[1:]
+    elif sum(indices[:4])==4*min(indices)+6:
+        return True,hand[:4]
+    else: return False
 
 def flush_check(hand):
     for suit in suits: 
@@ -38,7 +47,7 @@ def flush_draw_check(hand):
     for suit in suits:
         if "".join(hand).count(suit) == 3 or "".join(hand).count(suit) == 4:
             return True,suit
-    else: return False
+    else: return False,-1
 
 def fullhouse_check(hand):
     pairs = []
@@ -124,7 +133,6 @@ def ai_starting_hand(hand):
     back = []
     hand_indices = [values.index(x[:-1])+1 for x in hand]
     hand_pairs = [x for x,y in Counter(hand_indices).items() if y == 2]
-
     
     # If cpu draw lucky (Straight +), place the hand in the back
     if hand_evaluator(hand)[1] > 4:
@@ -165,7 +173,26 @@ def ai_starting_hand(hand):
                 middle.append(card)
             else: front.append(card)
 
-    return front, middle, back
+    # Elif the computer has open ended straight draws, place in the back 
+    elif openended_draw_check(hand) == True:
+        back.append(openended_draw_check[1])
+        if values.index([x for x in hand if x not in back][0][:-1]) > 8:
+            middle.append(x)
+        else: front.append([x for x in hand if x not in back][0])
+
+    # Elif the computer has a pair, place in back 
+    elif hand_evaluator(hand)[0] == "Pair":
+        for card in hand: 
+            if values.index(card[:-1]) == hand_pairs[0]:
+                back.append(card)
+            elif values.index(card[:-1]) > 10 and len(back)<3:
+                back.append(card)
+            elif values.index(card[:-1]) > 8 and len(middle)<2:
+                middle.append(card)
+            else: front.append(card)
+
+    if len(front + middle + back) == 5:
+        return " ".join(front) + "\n" +  " ".join(middle) + "\n" + " ".join(back) 
 
 def greedy_chinese_algorithm(front,middle,back):
     # Output best hand user could have created (with perfect information)
@@ -289,4 +316,3 @@ def single_player_openface():
     greedy_chinese_algorithm(front,middle,back)
 
 single_player_openface()
-
