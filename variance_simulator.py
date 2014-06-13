@@ -9,16 +9,15 @@ def profit_per_hand(winrate, stdev):
 def simulation(number_of_hands,runs,winrate,stdev):
 	results_per_hand = []
 	results_per_run = []
- 	net_total = [sum(results_per_hand[:x]) for x in xrange(1,number_of_hands)]
 
 	for run in range(runs):
-		results_per_hand.append([profit_per_hand(winrate,stdev) for x in xrange(1,number_of_hands)])
+		results_per_hand.append([profit_per_hand(winrate,stdev) for hand in xrange(1,number_of_hands)])
 
-	for x in results_per_hand:
-		results_per_run.append([sum(x[:y]) for y in xrange(1,number_of_hands)])
-
-	for x in results_per_run:
-		plt.plot(net_total)
+	for profit in results_per_hand:
+		results_per_run.append([sum(profit[:hand]) for hand in xrange(1,number_of_hands)])
+	
+	for run in results_per_run:
+		plt.plot(run)
 
 	plt.title('Variance Simulation')
 	plt.ylabel('Profit')
