@@ -131,7 +131,7 @@ def ai_starting_hand(hand):
     front = []
     middle = []
     back = []
-    hand_indices = [values.index(x[:-1])+1 for x in hand]
+    hand_indices = sorted([values.index(x[:-1])+1 for x in hand])
     hand_pairs = [x for x,y in Counter(hand_indices).items() if y == 2]
     
     # If cpu draw lucky (Straight +), place the hand in the back
@@ -191,8 +191,18 @@ def ai_starting_hand(hand):
                 middle.append(card)
             else: front.append(card)
 
+    # Elif the computer as hi card, place the two highest in back, two medium in middle
+    elif hand_evaluator(hand)[0] == "Hi-card":
+        for card in hand:
+            if values.index(card[:-1])+1 == hand_indices[3] or values.index(card[:-1])+1 == hand_indices[4]:
+                back.append(card)
+            elif values.index(card[:-1])+1 == hand_indices[1] or values.index(card[:-1])+1 == hand_indices[2]:
+                middle.append(card)
+            else: 
+                front.append(card)
+
     if len(front + middle + back) == 5:
-        return " ".join(front) + "\n" +  " ".join(middle) + "\n" + " ".join(back) 
+        return " ".join(back) + "\n" +  " ".join(middle) + "\n" + " ".join(front) 
 
 def greedy_chinese_algorithm(front,middle,back):
     # Output best hand user could have created (with perfect information)
@@ -232,87 +242,109 @@ def greedy_chinese_algorithm(front,middle,back):
     print " ".join(greedy_back) + " | " + hand_evaluator(greedy_back)[0]
 
 
-def single_player_openface():
-    front = []
-    middle = []
-    back = []
-    overall_hand = [front,middle,back]
+def hu_openface(hand_target):
+    hand_counter = 0
+    button = 1
 
-    player1_hand = random_hand()
-    print "Your starting hand is " + " ".join(player1_hand)
-    # Prompt user for placement of initial starting hand
-    # Button placement, while statement until the user ends session
-    # If CPU has button, then play. If human has button, you play first.
-    for card in player1_hand:
-        place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
+    while hand_counter < hand_target:
+        front = []
+        middle = []
+        back = []
+        overall_hand = [front,middle,back]
+        cpu_indices = []
+        user_hand = random_hand()
 
-        print "Your starting hand was " + "".join(player1_hand)
+        # Deal a random hand to the CPU
+        while len(cpu_indices) < 5:
+            x = randrange(0,52)
+            if cpu_indices.count(x) == 1 or user_hand.count(x) == 1: pass
+            else: cpu_indices.append(x)
 
-        if place.lower() == "f" and len(front)<3: front.append(card)
-        elif place.lower() =="m" and len(middle)<5: middle.append(card)
-        elif place.lower() == "b" and len(back)<5: back.append(card)
+        cpu_hand = [create_deck()[x] for x in cpu_indices]
 
-        # Error Handling
-        while place.lower() not in ("f", "m", "b") or \
-        (front.count(card) == 0 and middle.count(card)==0 and back.count(card)==0): 
+        print "The computer's hand is " + " ".join(cpu_hand)
+        print "Your starting hand is " + " ".join(user_hand)
 
-            place = raw_input("Please enter F, M or B: ")
+        # If button is odd, CPU has the button and user acts first
+        if button == 1:
+            # Prompt user for placement of initial starting hand
+            for card in user_hand:
+                place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
 
-            if place.lower() == "f" and len(front)<3: front.append(card)
-            elif place.lower() =="m" and len(middle)<5: middle.append(card)
-            elif place.lower() == "b" and len(back)<5: back.append(card)
+                print "Your starting hand was " + "".join(user_hand)
 
-        print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+                if place.lower() == "f" and len(front)<3: front.append(card)
+                elif place.lower() =="m" and len(middle)<5: middle.append(card)
+                elif place.lower() == "b" and len(back)<5: back.append(card)
 
-    # Prompt user for placement of subsequent draws until hand is complete
-    while len(front) + len(middle) + len(back) < 13:
-        remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back]
-        draw = remaining_deck[randrange(0,len(remaining_deck))]
+                # Error Handling
+                while place.lower() not in ("f", "m", "b") or \
+                (front.count(card) == 0 and middle.count(card)==0 and back.count(card)==0): 
 
-        # Provide user with the odds that they will foul for the sweat
-        if len(front) + len(middle) + len(back) == 12:
-            potential_fouls = 0
-            for card in remaining_deck:
+                    place = raw_input("Please enter F, M or B: ")
 
-                if len(front) < 3: front.append(card)
-                elif len(middle) < 5: middle.append(card)
-                elif len(back) < 5: back.append(card)
+                    if place.lower() == "f" and len(front)<3: front.append(card)
+                    elif place.lower() =="m" and len(middle)<5: middle.append(card)
+                    elif place.lower() == "b" and len(back)<5: back.append(card)
+                if len(front+middle+back)<5:
+                    print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+                    
+            print "-----------------AI HAND-----------------"
+            print ai_starting_hand(cpu_hand)
+            print "----------------USER HAND----------------"
+            print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
-                if is_foul(front,middle,back)==True:
-                    potential_fouls +=1
+        # Prompt user for placement of subsequent draws until hand is complete
+        while len(front) + len(middle) + len(back) < 13:
+            remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back]
+            draw = remaining_deck[randrange(0,len(remaining_deck))]
 
-                if front.count(card) > 0: front.remove(card)
-                elif middle.count(card) > 0: middle.remove(card)
-                elif back.count(card) > 0: back.remove(card)
+            # Provide user with the odds that they will foul for the sweat
+            if len(front) + len(middle) + len(back) == 12:
+                potential_fouls = 0
+                for card in remaining_deck:
+
+                    if len(front) < 3: front.append(card)
+                    elif len(middle) < 5: middle.append(card)
+                    elif len(back) < 5: back.append(card)
+
+                    if is_foul(front,middle,back)==True:
+                        potential_fouls +=1
+
+                    if front.count(card) > 0: front.remove(card)
+                    elif middle.count(card) > 0: middle.remove(card)
+                    elif back.count(card) > 0: back.remove(card)
 
 
-            print potential_fouls,len(remaining_deck)
-            print "You have a %f percent chance of fouling your hand!" % (100.0*potential_fouls/len(remaining_deck))
+                print potential_fouls,len(remaining_deck)
+                print "You have a %f percent chance of fouling your hand!" % (100.0*potential_fouls/len(remaining_deck))
 
-        place = raw_input("Where do you want to place " + str(draw) + " : F, M or B? ")
-
-        if place.lower() == "f" and len(front)<3: front.append(draw)
-        elif place.lower() =="m" and len(middle)<5: middle.append(draw)
-        elif place.lower() == "b" and len(back)<5: back.append(draw)
-        
-        while place.lower() not in ("f", "m", "b") or \
-        (front.count(draw) == 0 and middle.count(draw)==0 and back.count(draw)==0):  
-            print front,middle,back
-            place = raw_input("Please enter F, M or B: ")
+            place = raw_input("Where do you want to place " + str(draw) + " : F, M or B? ")
 
             if place.lower() == "f" and len(front)<3: front.append(draw)
             elif place.lower() =="m" and len(middle)<5: middle.append(draw)
             elif place.lower() == "b" and len(back)<5: back.append(draw)
+            
+            while place.lower() not in ("f", "m", "b") or \
+            (front.count(draw) == 0 and middle.count(draw)==0 and back.count(draw)==0):  
+                print front,middle,back
+                place = raw_input("Please enter F, M or B: ")
 
-        print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+                if place.lower() == "f" and len(front)<3: front.append(draw)
+                elif place.lower() =="m" and len(middle)<5: middle.append(draw)
+                elif place.lower() == "b" and len(back)<5: back.append(draw)
 
-    # Returning final hand, foul information, and hand evaluation to user
-    print "--------------------FINAL HAND--------------------"    
-    print " ".join(front) + "       | " + hand_evaluator(front)[0]
-    print " ".join(middle) + " | " + hand_evaluator(middle)[0]
-    print " ".join(back) + " | " + hand_evaluator(back)[0]
-    if is_foul(front,middle,back) == True: print "You fouled!"
-    print "------------------GREEDY CHINESE------------------"
-    greedy_chinese_algorithm(front,middle,back)
+            print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
-single_player_openface()
+        # Returning final hand, foul information, and hand evaluation to user
+        print "--------------------FINAL HAND--------------------"    
+        print " ".join(front) + "       | " + hand_evaluator(front)[0]
+        print " ".join(middle) + " | " + hand_evaluator(middle)[0]
+        print " ".join(back) + " | " + hand_evaluator(back)[0]
+        if is_foul(front,middle,back) == True: print "You fouled!"
+        print "------------------GREEDY CHINESE------------------"
+        greedy_chinese_algorithm(front,middle,back)
+        hand_counter+=1
+        button+=1
+
+hu_openface(10)
