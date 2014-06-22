@@ -136,7 +136,7 @@ def ai_starting_hand(hand):
     
     # If cpu draw lucky (Straight +), place the hand in the back
     if hand_evaluator(hand)[1] > 4:
-        back.append(hand)
+        back.extend(hand)
 
     # If cpu draw trips, place trips + smallest of remainders in the back
     elif hand_evaluator(hand)[0] == "Trips":
@@ -191,7 +191,7 @@ def ai_starting_hand(hand):
                 middle.append(card)
             else: front.append(card)
 
-    # Elif the computer as hi card, place the two highest in back, two medium in middle
+    # Elif the computer has hi card, place the two highest in back, two medium in middle
     elif hand_evaluator(hand)[0] == "Hi-card":
         for card in hand:
             if values.index(card[:-1])+1 == hand_indices[3] or values.index(card[:-1])+1 == hand_indices[4]:
@@ -201,8 +201,75 @@ def ai_starting_hand(hand):
             else: 
                 front.append(card)
 
-    if len(front + middle + back) == 5:
-        return " ".join(back) + "\n" +  " ".join(middle) + "\n" + " ".join(front) 
+    return front,middle,back
+
+def ai_place_draws(hand,draw):
+    front = []
+    middle = [] 
+    back = []
+
+    front.extend(hand[0])
+    middle.extend(hand[1])
+    back.extend(hand[2])
+
+    restricted_places = []
+
+    # Prevent AI from fouling its hand, by noting restricted placements
+    if len(front+middle+back) < 12:
+        if len(front) < 3 and len(middle) < 5 and len(back) < 5:
+            if is_foul(front+draw,middle,back) == True:
+                restricted_places.append('front')
+            elif is_foul(front,middle+draw,back) == True:
+                restricted_places.append('middle')
+            elif is_foul(front,middle,back+draw) == True:
+                restricted_places.append('back')
+        elif len(front) == 3 and len(middle) < 5 and len(back) < 5:
+            restricted_places.append('front')
+            if is_foul(front,middle+draw,back) == True:
+                restricted_places.append('middle')
+            elif is_foul(front,middle,back+draw) == True:
+                restricted_places.append('back')
+        elif len(front) < 3 and len(middle) == 5 and len(back) < 5:
+            restricted_places.append('middle')
+            if is_foul(front+draw,middle,back) == True:
+                restricted_places.append('front')
+            elif is_foul(front,middle,back+draw) == True:
+                restricted_places.append('back')
+        elif len(front) < 3 and len(middle) < 5 and len(back) == 5:
+            restricted_places.append('back')
+            if is_foul(front+draw,middle,back) == True:
+                restricted_places.append('front')
+            elif is_foul(front,middle+draw,back) == True:
+                restricted_places.append('middle')
+
+    # If all placements lead to a foul, just play any legal move
+    if len(restricted_places) == 3:
+        if len(front) < 3: return "front"
+        elif len(middle) < 5: return "middle"
+        elif len(back) < 5: return "back"
+
+    # If two placements lead to a foul, play the final placement
+    possible_places = ["front","middle","back"]
+    if len(restricted_places) == 2:
+        if list(set(possible_places)-set(restricted_places)) == ['front']:
+            return "front"
+        elif list(set(possible_places)-set(restricted_places)) == ['middle']:
+            return "middle"
+        elif list(set(possible_places)-set(restricted_places)) == ['back']:
+            return "back"
+
+    # If this is the final draw, place in the only legal location
+    if len(front) == 3 and len(middle) == 5 and len(back) == 4:
+        return "back"
+    elif len(front) == 3 and len(middle) == 4 and len(back) == 5:
+        return "middle"
+    elif len(front) == 2 and len(middle) == 5 and len(back) == 5:
+        return "front"
+
+    # Algorithm for placement (right now, dummy algorithm for testing)
+    if len(front) < 3: return "front"
+    elif len(middle) < 5: return "middle"
+    elif len(back) < 5: return "back"
 
 def greedy_chinese_algorithm(front,middle,back):
     # Output best hand user could have created (with perfect information)
@@ -261,7 +328,10 @@ def hu_openface(hand_target):
             else: cpu_indices.append(x)
 
         cpu_hand = [create_deck()[x] for x in cpu_indices]
-
+        cpu_front = []
+        cpu_middle = []
+        cpu_back = []
+        cpu_overall = cpu_front + cpu_middle + cpu_back
         print "The computer's hand is " + " ".join(cpu_hand)
         print "Your starting hand is " + " ".join(user_hand)
 
@@ -274,7 +344,7 @@ def hu_openface(hand_target):
                 print "Your starting hand was " + "".join(user_hand)
 
                 if place.lower() == "f" and len(front)<3: front.append(card)
-                elif place.lower() =="m" and len(middle)<5: middle.append(card)
+                elif place.lower() == "m" and len(middle)<5: middle.append(card)
                 elif place.lower() == "b" and len(back)<5: back.append(card)
 
                 # Error Handling
@@ -284,7 +354,7 @@ def hu_openface(hand_target):
                     place = raw_input("Please enter F, M or B: ")
 
                     if place.lower() == "f" and len(front)<3: front.append(card)
-                    elif place.lower() =="m" and len(middle)<5: middle.append(card)
+                    elif place.lower() == "m" and len(middle)<5: middle.append(card)
                     elif place.lower() == "b" and len(back)<5: back.append(card)
                 if len(front+middle+back)<5:
                     print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
@@ -294,10 +364,25 @@ def hu_openface(hand_target):
             print "----------------USER HAND----------------"
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
+        cpu_front.append(ai_starting_hand(cpu_hand)[0])
+        cpu_middle.append(ai_starting_hand(cpu_hand)[1])
+        cpu_back.append(ai_starting_hand(cpu_hand)[2])
+
         # Prompt user for placement of subsequent draws until hand is complete
         while len(front) + len(middle) + len(back) < 13:
-            remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back]
+            remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back and x not in cpu_overall]
             draw = remaining_deck[randrange(0,len(remaining_deck))]
+            ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
+
+            while draw == ai_draw:
+                ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
+            while len(cpu_front) + len(cpu_middle) + len(cpu_back) < 13:
+                if ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "front":
+                    cpu_front.append(ai_draw)
+                elif ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "middle":
+                    cpu_middle.append(ai_draw)
+                elif ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "back":
+                    cpu_back.append(ai_draw)
 
             # Provide user with the odds that they will foul for the sweat
             if len(front) + len(middle) + len(back) == 12:
@@ -314,7 +399,6 @@ def hu_openface(hand_target):
                     if front.count(card) > 0: front.remove(card)
                     elif middle.count(card) > 0: middle.remove(card)
                     elif back.count(card) > 0: back.remove(card)
-
 
                 print potential_fouls,len(remaining_deck)
                 print "You have a %f percent chance of fouling your hand!" % (100.0*potential_fouls/len(remaining_deck))
@@ -347,4 +431,3 @@ def hu_openface(hand_target):
         hand_counter+=1
         button+=1
 
-hu_openface(10)
