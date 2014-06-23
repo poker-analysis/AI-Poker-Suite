@@ -156,11 +156,11 @@ def ai_starting_hand(hand):
 
     # Place the fifth card on the front if it is weak, middle if it is strong
     elif hand_evaluator(hand)[0] == "Two Pair":
+        # Add two pair to the back
         for card in hand: 
-            if hand_indices.count(values.index(card[:-1])+1)>1:
+            if values.index(card[:-1]) == hand_pairs[0]:
                 back.append(card)
-        for card in hand:
-            if back.count(card) == 0 and values.index(card[:-1])>=7:
+            elif back.count(card) == 0 and values.index(card[:-1])>=7:
                 middle.append(card)
             else: front.append(card)
 
@@ -201,12 +201,13 @@ def ai_starting_hand(hand):
             else: 
                 front.append(card)
 
-    return front,middle,back
+    print " ".join(back) + "\n" + " ".join(middle) + "\n" + " ".join(front)
 
 def ai_place_draws(hand,draw):
     front = []
     middle = [] 
     back = []
+    draw = [draw]
 
     front.extend(hand[0])
     middle.extend(hand[1])
@@ -332,7 +333,6 @@ def hu_openface(hand_target):
         cpu_middle = []
         cpu_back = []
         cpu_overall = cpu_front + cpu_middle + cpu_back
-        print "The computer's hand is " + " ".join(cpu_hand)
         print "Your starting hand is " + " ".join(user_hand)
 
         # If button is odd, CPU has the button and user acts first
@@ -360,13 +360,13 @@ def hu_openface(hand_target):
                     print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
                     
             print "-----------------AI HAND-----------------"
-            print ai_starting_hand(cpu_hand)
+            ai_starting_hand(cpu_hand)
             print "----------------USER HAND----------------"
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
-        cpu_front.append(ai_starting_hand(cpu_hand)[0])
-        cpu_middle.append(ai_starting_hand(cpu_hand)[1])
-        cpu_back.append(ai_starting_hand(cpu_hand)[2])
+        cpu_front.extend(ai_starting_hand(cpu_hand)[0])
+        cpu_middle.extend(ai_starting_hand(cpu_hand)[1])
+        cpu_back.extend(ai_starting_hand(cpu_hand)[2])
 
         # Prompt user for placement of subsequent draws until hand is complete
         while len(front) + len(middle) + len(back) < 13:
@@ -376,6 +376,7 @@ def hu_openface(hand_target):
 
             while draw == ai_draw:
                 ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
+
             while len(cpu_front) + len(cpu_middle) + len(cpu_back) < 13:
                 if ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "front":
                     cpu_front.append(ai_draw)
@@ -418,6 +419,7 @@ def hu_openface(hand_target):
                 elif place.lower() =="m" and len(middle)<5: middle.append(draw)
                 elif place.lower() == "b" and len(back)<5: back.append(draw)
 
+            print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
         # Returning final hand, foul information, and hand evaluation to user
@@ -430,4 +432,9 @@ def hu_openface(hand_target):
         greedy_chinese_algorithm(front,middle,back)
         hand_counter+=1
         button+=1
+
+# sample test case that breaks 
+print ai_starting_hand(["Tc", "Th", "8d", "5c", "5d"])
+print ai_starting_hand(["Tc", "Jh", "3d", "Tc", "5d"])
+
 
