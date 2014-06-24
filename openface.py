@@ -2,6 +2,14 @@ from random import randrange
 from collections import Counter 
 from itertools import combinations
 
+# Pending List of Issues:
+# 1. AI and user received some same cards
+# 2. Formatting of Output
+# 3. Added card to one row, came up in another
+# 4. Royalties + Scoring of Hands
+# 5. AI with robust rules for placement
+# 6. AI with more rules for placement 
+
 # global variables
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
@@ -84,6 +92,15 @@ def hand_comparison(hand1,hand2):
     hand2_strength = hand_evaluator(hand2)[1]
     h1_indices = [values.index(x[:-1])+1 for x in hand1]
     h2_indices = [values.index(x[:-1])+1 for x in hand2]
+
+    # Error Catching if hand is empty
+    if len(hand1) == 0 and len(hand2) == 0:
+        return "Tie"
+    elif len(hand1) == 0:
+        return False
+    elif len(hand2) == 0:
+        return True
+
     h1_common = max(set(h1_indices), key=h1_indices.count)
     h2_common = max(set(h2_indices), key=h2_indices.count)
 
@@ -158,7 +175,9 @@ def ai_starting_hand(hand):
     elif hand_evaluator(hand)[0] == "Two Pair":
         # Add two pair to the back
         for card in hand: 
-            if values.index(card[:-1]) == hand_pairs[0]:
+            if values.index(card[:-1]) + 1 == hand_pairs[0]:
+                back.append(card)
+            elif values.index(card[:-1]) + 1 == hand_pairs[1]:
                 back.append(card)
             elif back.count(card) == 0 and values.index(card[:-1])>=7:
                 middle.append(card)
@@ -183,7 +202,7 @@ def ai_starting_hand(hand):
     # Elif the computer has a pair, place in back 
     elif hand_evaluator(hand)[0] == "Pair":
         for card in hand: 
-            if values.index(card[:-1]) == hand_pairs[0]:
+            if values.index(card[:-1]) + 1 == hand_pairs[0]:
                 back.append(card)
             elif values.index(card[:-1]) > 10 and len(back)<3:
                 back.append(card)
@@ -201,22 +220,16 @@ def ai_starting_hand(hand):
             else: 
                 front.append(card)
 
-    print " ".join(back) + "\n" + " ".join(middle) + "\n" + " ".join(front)
+    return front,middle,back
 
-def ai_place_draws(hand,draw):
-    front = []
-    middle = [] 
-    back = []
+def ai_place_draws(front,middle,back,draw):
+    
     draw = [draw]
-
-    front.extend(hand[0])
-    middle.extend(hand[1])
-    back.extend(hand[2])
-
     restricted_places = []
 
     # Prevent AI from fouling its hand, by noting restricted placements
-    if len(front+middle+back) < 12:
+    if middle == []: pass 
+    elif len(front+middle+back) < 12:
         if len(front) < 3 and len(middle) < 5 and len(back) < 5:
             if is_foul(front+draw,middle,back) == True:
                 restricted_places.append('front')
@@ -318,14 +331,15 @@ def hu_openface(hand_target):
         front = []
         middle = []
         back = []
-        overall_hand = [front,middle,back]
+        overall_hand = front+middle+back
         cpu_indices = []
         user_hand = random_hand()
+        user_indices = [values.index(x[:-1]) for x in user_hand]
 
         # Deal a random hand to the CPU
         while len(cpu_indices) < 5:
             x = randrange(0,52)
-            if cpu_indices.count(x) == 1 or user_hand.count(x) == 1: pass
+            if cpu_indices.count(x) == 1 or user_indices.count(x) == 1: pass
             else: cpu_indices.append(x)
 
         cpu_hand = [create_deck()[x] for x in cpu_indices]
@@ -358,33 +372,34 @@ def hu_openface(hand_target):
                     elif place.lower() == "b" and len(back)<5: back.append(card)
                 if len(front+middle+back)<5:
                     print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
-                    
+
+            cpu_front.extend(ai_starting_hand(cpu_hand)[0])
+            cpu_middle.extend(ai_starting_hand(cpu_hand)[1])
+            cpu_back.extend(ai_starting_hand(cpu_hand)[2])
+
             print "-----------------AI HAND-----------------"
-            ai_starting_hand(cpu_hand)
+            print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
             print "----------------USER HAND----------------"
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
-        cpu_front.extend(ai_starting_hand(cpu_hand)[0])
-        cpu_middle.extend(ai_starting_hand(cpu_hand)[1])
-        cpu_back.extend(ai_starting_hand(cpu_hand)[2])
-
         # Prompt user for placement of subsequent draws until hand is complete
         while len(front) + len(middle) + len(back) < 13:
-            remaining_deck = [x for x in create_deck() if x not in front and x not in middle and x not in back and x not in cpu_overall]
+            remaining_deck = [x for x in create_deck() if x not in overall_hand and x not in cpu_overall]
             draw = remaining_deck[randrange(0,len(remaining_deck))]
             ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
 
             while draw == ai_draw:
                 ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
 
-            while len(cpu_front) + len(cpu_middle) + len(cpu_back) < 13:
-                if ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "front":
+            
+            if len(cpu_front) + len(cpu_middle) + len(cpu_back) < 13:
+                if ai_place_draws(cpu_front,cpu_middle,cpu_back,ai_draw) == "front":
                     cpu_front.append(ai_draw)
-                elif ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "middle":
+                elif ai_place_draws(cpu_front,cpu_middle,cpu_back,ai_draw) == "middle":
                     cpu_middle.append(ai_draw)
-                elif ai_place_draws((cpu_front,cpu_middle,cpu_back),ai_draw) == "back":
+                elif ai_place_draws(cpu_front,cpu_middle,cpu_back,ai_draw) == "back":
                     cpu_back.append(ai_draw)
-
+            
             # Provide user with the odds that they will foul for the sweat
             if len(front) + len(middle) + len(back) == 12:
                 potential_fouls = 0
@@ -419,11 +434,17 @@ def hu_openface(hand_target):
                 elif place.lower() =="m" and len(middle)<5: middle.append(draw)
                 elif place.lower() == "b" and len(back)<5: back.append(draw)
 
+            print "-----------------AI HAND-----------------"
             print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
+            print "----------------USER HAND----------------"
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
         # Returning final hand, foul information, and hand evaluation to user
-        print "--------------------FINAL HAND--------------------"    
+        print "--------------------AI FINAL HAND--------------------"
+        print " ".join(cpu_back) + " | " + hand_evaluator(cpu_back)[0]
+        print " ".join(cpu_middle) + " | " + hand_evaluator(cpu_middle)[0]
+        print " ".join(cpu_front) + "       | " + hand_evaluator(cpu_front)[0]
+        print "--------------------USER FINAL HAND--------------------"    
         print " ".join(front) + "       | " + hand_evaluator(front)[0]
         print " ".join(middle) + " | " + hand_evaluator(middle)[0]
         print " ".join(back) + " | " + hand_evaluator(back)[0]
@@ -433,8 +454,4 @@ def hu_openface(hand_target):
         hand_counter+=1
         button+=1
 
-# sample test case that breaks 
-print ai_starting_hand(["Tc", "Th", "8d", "5c", "5d"])
-print ai_starting_hand(["Tc", "Jh", "3d", "Tc", "5d"])
-
-
+hu_openface(1)
