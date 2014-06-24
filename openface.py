@@ -3,9 +3,6 @@ from collections import Counter
 from itertools import combinations
 
 # Pending List of Issues:
-# 1. AI and user received some same cards
-# 2. Formatting of Output
-# 3. Added card to one row, came up in another
 # 4. Royalties + Scoring of Hands
 # 5. AI with robust rules for placement
 # 6. AI with more rules for placement 
@@ -331,22 +328,19 @@ def hu_openface(hand_target):
         front = []
         middle = []
         back = []
-        overall_hand = front+middle+back
         cpu_indices = []
         user_hand = random_hand()
-        user_indices = [values.index(x[:-1]) for x in user_hand]
-
+        user_indices = [create_deck().index(x) for x in user_hand]
+        
         # Deal a random hand to the CPU
         while len(cpu_indices) < 5:
             x = randrange(0,52)
             if cpu_indices.count(x) == 1 or user_indices.count(x) == 1: pass
             else: cpu_indices.append(x)
-
         cpu_hand = [create_deck()[x] for x in cpu_indices]
         cpu_front = []
         cpu_middle = []
         cpu_back = []
-        cpu_overall = cpu_front + cpu_middle + cpu_back
         print "Your starting hand is " + " ".join(user_hand)
 
         # If button is odd, CPU has the button and user acts first
@@ -384,6 +378,8 @@ def hu_openface(hand_target):
 
         # Prompt user for placement of subsequent draws until hand is complete
         while len(front) + len(middle) + len(back) < 13:
+            overall_hand = front+middle+back
+            cpu_overall = cpu_front + cpu_middle + cpu_back
             remaining_deck = [x for x in create_deck() if x not in overall_hand and x not in cpu_overall]
             draw = remaining_deck[randrange(0,len(remaining_deck))]
             ai_draw = remaining_deck[randrange(0,len(remaining_deck))]
@@ -434,10 +430,11 @@ def hu_openface(hand_target):
                 elif place.lower() =="m" and len(middle)<5: middle.append(draw)
                 elif place.lower() == "b" and len(back)<5: back.append(draw)
 
-            print "-----------------AI HAND-----------------"
-            print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
-            print "----------------USER HAND----------------"
-            print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+            if len(front) + len(middle) + len(back) < 13:
+                print "-----------------AI HAND-----------------"
+                print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
+                print "----------------USER HAND----------------"
+                print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
         # Returning final hand, foul information, and hand evaluation to user
         print "--------------------AI FINAL HAND--------------------"
@@ -449,7 +446,9 @@ def hu_openface(hand_target):
         print " ".join(middle) + " | " + hand_evaluator(middle)[0]
         print " ".join(back) + " | " + hand_evaluator(back)[0]
         if is_foul(front,middle,back) == True: print "You fouled!"
-        print "------------------GREEDY CHINESE------------------"
+        print "------------------GREEDY CHINESE (CPU)------------------"
+        greedy_chinese_algorithm(cpu_front,cpu_middle,cpu_back)
+        print "------------------GREEDY CHINESE (USER)------------------"
         greedy_chinese_algorithm(front,middle,back)
         hand_counter+=1
         button+=1
