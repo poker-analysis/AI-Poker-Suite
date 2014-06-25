@@ -3,9 +3,12 @@ from collections import Counter
 from itertools import combinations
 
 # Pending List of Issues:
-# 4. Royalties + Scoring of Hands
-# 5. AI with robust rules for placement
-# 6. AI with more rules for placement 
+# 1. Button placement + game flow
+# 2. AI with robust rules for placement
+# 3. AI vs AI
+# 4. optimality (as % of Greedy Chinese)
+# 5. Refactoring Inefficiencies
+# 6. PEP 8 Style Guide
 
 # global variables
 suits = ["s","h","d","c"]
@@ -144,19 +147,74 @@ def royalty_scoring(hand,position):
     if position == "front":
         if hand_evaluator(hand)[0] == "Pair":
             if pairs >= 5:
-                return pairs[0] - 4 
+                return pairs[0] - 4
+            else: return 0 
         elif hand_evaluator(hand)[0] == "Trips":
             return pairs[0]+9
+        else: return 0
 
     # Middle Royalties
     elif position == "middle":
         if hand_evaluator(hand)[1] >= 4: 
-            return middle_units[middle_royalties.index(hand_evaluator(hand))]
+            return middle_units[middle_royalties.index(hand_evaluator(hand)[0])]
+        else: return 0
 
     # Back Royalties
     elif position == "back":
         if hand_evaluator(hand)[1] >= 5:
-            return back_units[middle_royalties.index(hand_evaluator(hand))]
+            return back_units[back_royalties.index(hand_evaluator(hand)[0])]
+        else: return 0
+
+def final_scoring(hand1,hand2):
+    front = hand1[:3]
+    middle = hand1[3:8]
+    back = hand1[8:]
+    front2 = hand2[:3]
+    middle2 = hand2[3:8]
+    back2 = hand2[8:]
+
+    # Foul Scoring + Royalties
+    if is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == True:
+        return [0,0,0,0,0,0]
+
+    elif is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == False:
+        score = [-2,-2,-2,2,2,2]
+        score[3] += royalty_scoring(front2,"front")
+        score[4] += royalty_scoring(middle2,"middle")
+        score[5] += royalty_scoring(back2,"back")
+
+    elif is_foul(front,middle,back) == False and is_foul(front2,middle2,back2) == True:
+        score = [2,2,2,-2,-2,-2]
+        score[0] += royalty_scoring(front,"front")
+        score[1] += royalty_scoring(middle,"middle")
+        score[2] += royalty_scoring(back,"back")
+
+    # Sweep Scoring + Royalties
+    elif hand_comparison(front,front2) == True and hand_comparison(middle,middle2) == True \
+    and hand_comparison(back,back2) == True: 
+        score = [2,2,2,-2,-2,-2]
+        score[0] += royalty_scoring(front,"front")
+        score[1] += royalty_scoring(middle,"middle")
+        score[2] += royalty_scoring(back,"back")
+
+    elif hand_comparison(front2,front) == True and hand_comparison(middle2,middle) == True \
+    and hand_comparison(back2,back) == True: 
+        score = [-2,-2,-2,2,2,2]
+        score[3] += royalty_scoring(front2,"front")
+        score[4] += royalty_scoring(middle2,"middle")
+        score[5] += royalty_scoring(back2,"back")
+
+    # All other cases 
+    else:
+        score = [0,0,0,0,0,0]
+        score[0] += royalty_scoring(front,"front") + hand_comparison(front,front2) 
+        score[1] += royalty_scoring(middle,"middle") + hand_comparison(middle,middle2)
+        score[2] += royalty_scoring(back,"back") + hand_comparison(back,back2)
+        score[3] += royalty_scoring(front2,"front") + hand_comparison(front2,front)
+        score[4] += royalty_scoring(middle2,"middle") + hand_comparison(middle2,middle)
+        score[5] += royalty_scoring(back2,"back") + hand_comparison(back2,back)
+
+    return score 
 
 def is_foul(front, middle, back):
     # return True if hand is fouled, False otherwise
@@ -357,7 +415,9 @@ def hu_openface(hand_target):
         cpu_indices = []
         user_hand = random_hand()
         user_indices = [create_deck().index(x) for x in user_hand]
-        
+        user_overall = []
+        ai_overall = []
+
         # Deal a random hand to the CPU
         while len(cpu_indices) < 5:
             x = randrange(0,52)
@@ -462,20 +522,47 @@ def hu_openface(hand_target):
                 print "----------------USER HAND----------------"
                 print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
+        user_overall.extend(front+middle+back)
+        ai_overall.extend(cpu_front+cpu_middle+cpu_back)
+
         # Returning final hand, foul information, and hand evaluation to user
-        print "--------------------AI FINAL HAND--------------------"
-        print " ".join(cpu_back) + " | " + hand_evaluator(cpu_back)[0]
-        print " ".join(cpu_middle) + " | " + hand_evaluator(cpu_middle)[0]
-        print " ".join(cpu_front) + "       | " + hand_evaluator(cpu_front)[0]
+
+        print "-------------------- AI FINAL HAND --------------------"
+        print " ".join(cpu_back) + " | " + hand_evaluator(cpu_back)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[5]
+        print " ".join(cpu_middle) + " | " + hand_evaluator(cpu_middle)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[4]
+        print " ".join(cpu_front) + "       | " + hand_evaluator(cpu_front)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[3]
         print "--------------------USER FINAL HAND--------------------"    
-        print " ".join(front) + "       | " + hand_evaluator(front)[0]
-        print " ".join(middle) + " | " + hand_evaluator(middle)[0]
-        print " ".join(back) + " | " + hand_evaluator(back)[0]
-        if is_foul(front,middle,back) == True: print "You fouled!"
-        print "------------------GREEDY CHINESE (CPU)------------------"
-        greedy_chinese_algorithm(cpu_front,cpu_middle,cpu_back)
-        print "------------------GREEDY CHINESE (USER)------------------"
-        greedy_chinese_algorithm(front,middle,back)
+        print " ".join(front) + "       | " + hand_evaluator(front)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[0]
+        print " ".join(middle) + " | " + hand_evaluator(middle)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[1]
+        print " ".join(back) + " | " + hand_evaluator(back)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[2]
+        
+        if is_foul(front,middle,back) == True and is_foul(cpu_front,cpu_middle,cpu_back) == False: 
+            print "====================    RESULTS    ===================="
+            print "User fouled!"
+            print "User: -%s" % (sum(final_scoring(user_overall,ai_overall)[3:6]))
+            print "AI:   +%s" % (sum(final_scoring(user_overall,ai_overall)[3:6]))
+        elif is_foul(front,middle,back) == True and is_foul(cpu_front,cpu_middle,cpu_back) == True: 
+            print "====================    RESULTS    ===================="
+            print "Both User and AI fouled!"
+            print "User: +0"
+            print "AI:   +0"
+        elif is_foul(front,middle,back) == False and is_foul(cpu_front,cpu_middle,cpu_back) == True:
+            print "====================    RESULTS    ===================="
+            print "AI fouled!"
+            print "User: +%s" % (sum(final_scoring(user_overall,cpu_hand)[:3]))
+            print "AI:   -%s" % (sum(final_scoring(user_overall,cpu_hand)[:3]))
+        else:
+            print "====================    RESULTS    ===================="
+            if sum(final_scoring(user_overall,ai_overall)[3:6]) > sum(final_scoring(user_overall,ai_overall)[:3]):
+                print "User: -%s" % (sum(final_scoring(user_overall,ai_overall)[3:6])-sum(final_scoring(user_overall,ai_overall)[:3]))
+                print "AI:   +%s" % (sum(final_scoring(user_overall,ai_overall)[3:6])-sum(final_scoring(user_overall,ai_overall)[:3]))
+            elif sum(final_scoring(user_overall,ai_overall)[3:6]) < sum(final_scoring(user_overall,ai_overall)[:3]): 
+                print "User: +%s" % (sum(final_scoring(user_overall,ai_overall)[:3])-sum(final_scoring(user_overall,ai_overall)[3:6]))
+                print "AI:   -%s" % (sum(final_scoring(user_overall,ai_overall)[:3])-sum(final_scoring(user_overall,ai_overall)[3:6]))
+            else:
+                print "User: 0"
+                print "AI:   0"
+
         hand_counter+=1
         button+=1
 
