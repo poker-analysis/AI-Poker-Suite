@@ -132,6 +132,32 @@ def hand_comparison(hand1,hand2):
             else: 
                 return h1_common > h2_common
 
+def royalty_scoring(hand,position):
+    indices = [values.index(x[:-1])+1 for x in hand]
+    pairs = [x for x,y in Counter(indices).items() if y >= 2]
+    middle_units = [2,4,8,12,20,30,50]
+    middle_royalties=["Trips","Straight","Flush","Full House","Quads","Straight Flush", "Royal Flush"]
+    back_units = [2,4,6,10,15,25]
+    back_royalties=["Straight","Flush","Full House","Quads","Straight Flush","Royal Flush"]
+    
+    # Front Royalties
+    if position == "front":
+        if hand_evaluator(hand)[0] == "Pair":
+            if pairs >= 5:
+                return pairs[0] - 4 
+        elif hand_evaluator(hand)[0] == "Trips":
+            return pairs[0]+9
+
+    # Middle Royalties
+    elif position == "middle":
+        if hand_evaluator(hand)[1] >= 4: 
+            return middle_units[middle_royalties.index(hand_evaluator(hand))]
+
+    # Back Royalties
+    elif position == "back":
+        if hand_evaluator(hand)[1] >= 5:
+            return back_units[middle_royalties.index(hand_evaluator(hand))]
+
 def is_foul(front, middle, back):
     # return True if hand is fouled, False otherwise
     if hand_comparison(front,middle) == True or hand_comparison(front,back) == True \
