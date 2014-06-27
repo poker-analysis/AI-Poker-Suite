@@ -166,60 +166,58 @@ def royalty_scoring(hand,position):
         else: return 0
 
 def final_scoring(hand1,hand2):
+    # Returns tuples of user, ai scores
     front = hand1[:3]
     middle = hand1[3:8]
     back = hand1[8:]
     front2 = hand2[:3]
     middle2 = hand2[3:8]
     back2 = hand2[8:]
-
-    # Foul Scoring + Royalties
-    if is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == True:
-        return [0,0,0,0,0,0]
-
-    elif is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == False:
-        score = [-2,-2,-2,2,2,2]
-        score[3] += royalty_scoring(front2,"front")
-        score[4] += royalty_scoring(middle2,"middle")
-        score[5] += royalty_scoring(back2,"back")
-
+    user_royalties = royalty_scoring(front,"front") + royalty_scoring(middle,"middle")+ royalty_scoring(back,"back") 
+    ai_royalties = royalty_scoring(front2,"front") + royalty_scoring(middle2,"middle")+ royalty_scoring(back2,"back") 
+    user = 0
+    ai = 0
+    # Foul Conditions
+    if is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == False: 
+        return (-6 - ai_royalties),(6 + ai_royalties)
+    elif is_foul(front,middle,back) == True and is_foul(front2,middle2,back2) == True: 
+        return (0,0)
     elif is_foul(front,middle,back) == False and is_foul(front2,middle2,back2) == True:
-        score = [2,2,2,-2,-2,-2]
-        score[0] += royalty_scoring(front,"front")
-        score[1] += royalty_scoring(middle,"middle")
-        score[2] += royalty_scoring(back,"back")
+        return (6 + user_royalties),(-6 - user_royalties)
+    # Sweep Conditions
+    elif is_sweep(front,middle,back,front2,middle2,back2) == "User":
+        return (6 + user_royalties),(-6 - user_royalties)    
+    elif is_sweep(front,middle,back,front2,middle2,back2) == "AI":
+        return (-6 - ai_royalties),(6 + ai_royalties)
 
-    # Sweep Scoring + Royalties
-    elif hand_comparison(front,front2) == True and hand_comparison(middle,middle2) == True \
-    and hand_comparison(back,back2) == True: 
-        score = [2,2,2,-2,-2,-2]
-        score[0] += royalty_scoring(front,"front")
-        score[1] += royalty_scoring(middle,"middle")
-        score[2] += royalty_scoring(back,"back")
-
-    elif hand_comparison(front2,front) == True and hand_comparison(middle2,middle) == True \
-    and hand_comparison(back2,back) == True: 
-        score = [-2,-2,-2,2,2,2]
-        score[3] += royalty_scoring(front2,"front")
-        score[4] += royalty_scoring(middle2,"middle")
-        score[5] += royalty_scoring(back2,"back")
-
-    # All other cases 
+    # Standard Hand Comparison
     else:
-        score = [0,0,0,0,0,0]
-        score[0] += royalty_scoring(front,"front") + hand_comparison(front,front2) 
-        score[1] += royalty_scoring(middle,"middle") + hand_comparison(middle,middle2)
-        score[2] += royalty_scoring(back,"back") + hand_comparison(back,back2)
-        score[3] += royalty_scoring(front2,"front") + hand_comparison(front2,front)
-        score[4] += royalty_scoring(middle2,"middle") + hand_comparison(middle2,middle)
-        score[5] += royalty_scoring(back2,"back") + hand_comparison(back2,back)
+        if hand_comparison(front,front2) == True: user += 1
+        elif hand_comparison(front2,front) == True: ai += 1
+        if hand_comparison(middle,middle2) == True: user += 1
+        elif hand_comparison(middle2,middle) == True: ai +=1
+        if hand_comparison(back,back2) == True: user += 1
+        elif hand_comparison(back2,back) == True: ai += 1
 
-    return score 
+        if user > ai:
+            return (1 + user_royalties - ai_royalties),(ai_royalties - user_royalties - 1)
+        elif ai > user:
+            return (user_royalties - ai_royalties - 1),(1 + ai_royalties - user_royalties)
+        else:
+            return (user_royalties - ai_royalties),(ai_royalties - user_royalties)
+
 
 def is_foul(front, middle, back):
     # return True if hand is fouled, False otherwise
     if hand_comparison(front,middle) == True or hand_comparison(front,back) == True \
     or hand_comparison(middle,back) == True: return True
+    else: return False
+
+def is_sweep(front,middle,back,front2,middle2,back2):
+    if hand_comparison(front,front2) == True and hand_comparison(middle,middle2) == True and hand_comparison(back,back2) == True:
+        return "User"
+    elif hand_comparison(front2,front) == True and hand_comparison(middle2,middle) == True and hand_comparison(back2,back) == True:
+        return "AI"
     else: return False
 
 def ai_starting_hand(hand):
@@ -424,10 +422,20 @@ def greedy_chinese_algorithm(front,middle,back):
     print " ".join(greedy_middle) + " | " + hand_evaluator(greedy_middle)[0]
     print " ".join(greedy_back) + " | " + hand_evaluator(greedy_back)[0]
 
-
 def hu_openface(hand_target):
     hand_counter = 0
     button = 1
+
+    # Global Variables (Stats)
+    user_hands_won = 0
+    ai_hands_won = 0
+    hands_tied = 0
+    user_hands_fouled = 0
+    ai_hands_fouled = 0
+    user_total_units = 0
+    ai_total_units = 0
+    user_profit = []
+    ai_profit = []
 
     while hand_counter < hand_target:
         front = []
@@ -547,44 +555,61 @@ def hu_openface(hand_target):
         ai_overall.extend(cpu_front+cpu_middle+cpu_back)
 
         # Returning final hand, foul information, and hand evaluation to user
-
         print "-------------------- AI FINAL HAND --------------------"
-        print " ".join(cpu_back) + " | " + hand_evaluator(cpu_back)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[5]
-        print " ".join(cpu_middle) + " | " + hand_evaluator(cpu_middle)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[4]
-        print " ".join(cpu_front) + "       | " + hand_evaluator(cpu_front)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[3]
+        print " ".join(cpu_back) + " | " + hand_evaluator(cpu_back)[0] 
+        print " ".join(cpu_middle) + " | " + hand_evaluator(cpu_middle)[0] 
+        print " ".join(cpu_front) + "       | " + hand_evaluator(cpu_front)[0]
         print "--------------------USER FINAL HAND--------------------"    
-        print " ".join(front) + "       | " + hand_evaluator(front)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[0]
-        print " ".join(middle) + " | " + hand_evaluator(middle)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[1]
-        print " ".join(back) + " | " + hand_evaluator(back)[0] + "(%s)" % final_scoring(user_overall,ai_overall)[2]
+        print " ".join(front) + "       | " + hand_evaluator(front)[0] 
+        print " ".join(middle) + " | " + hand_evaluator(middle)[0] 
+        print " ".join(back) + " | " + hand_evaluator(back)[0] 
         
+        print "====================    RESULTS    ===================="
+
+        user_unit_gain = final_scoring(user_overall,ai_overall)[0]
+        ai_unit_gain = final_scoring(user_overall,ai_overall)[1]
+        user_total_units += user_unit_gain
+        ai_total_units += ai_unit_gain
+
+        # Print outcome of the hand
         if is_foul(front,middle,back) == True and is_foul(cpu_front,cpu_middle,cpu_back) == False: 
-            print "====================    RESULTS    ===================="
             print "User fouled!"
-            print "User: -%s" % (sum(final_scoring(user_overall,ai_overall)[3:6]))
-            print "AI:   +%s" % (sum(final_scoring(user_overall,ai_overall)[3:6]))
+            user_hands_fouled +=1
         elif is_foul(front,middle,back) == True and is_foul(cpu_front,cpu_middle,cpu_back) == True: 
-            print "====================    RESULTS    ===================="
             print "Both User and AI fouled!"
-            print "User: +0"
-            print "AI:   +0"
+            user_hands_fouled +=1
+            ai_hands_fouled +=1
         elif is_foul(front,middle,back) == False and is_foul(cpu_front,cpu_middle,cpu_back) == True:
-            print "====================    RESULTS    ===================="
             print "AI fouled!"
-            print "User: +%s" % (sum(final_scoring(user_overall,cpu_hand)[:3]))
-            print "AI:   -%s" % (sum(final_scoring(user_overall,cpu_hand)[:3]))
+            ai_hands_fouled +=1
+        elif is_sweep(front,middle,back,cpu_front,cpu_middle,cpu_back) == "User":
+            print "User Sweeped"
+        elif is_sweep(front,middle,back,cpu_front,cpu_middle,cpu_back) == "AI":
+            print "AI Sweeped"
+
+        print "User : %s" % (user_unit_gain)
+        print "AI   : %s" % (ai_unit_gain)
+
+        # Stats and record keeping
+        user_profit.append(user_unit_gain)
+        ai_profit.append(ai_unit_gain)
+
+        if user_unit_gain > ai_unit_gain: 
+            user_hands_won +=1
+        elif user_unit_gain < ai_unit_gain:
+            ai_hands_won +=1
         else:
-            print "====================    RESULTS    ===================="
-            if sum(final_scoring(user_overall,ai_overall)[3:6]) > sum(final_scoring(user_overall,ai_overall)[:3]):
-                print "User: -%s" % (sum(final_scoring(user_overall,ai_overall)[3:6])-sum(final_scoring(user_overall,ai_overall)[:3]))
-                print "AI:   +%s" % (sum(final_scoring(user_overall,ai_overall)[3:6])-sum(final_scoring(user_overall,ai_overall)[:3]))
-            elif sum(final_scoring(user_overall,ai_overall)[3:6]) < sum(final_scoring(user_overall,ai_overall)[:3]): 
-                print "User: +%s" % (sum(final_scoring(user_overall,ai_overall)[:3])-sum(final_scoring(user_overall,ai_overall)[3:6]))
-                print "AI:   -%s" % (sum(final_scoring(user_overall,ai_overall)[:3])-sum(final_scoring(user_overall,ai_overall)[3:6]))
-            else:
-                print "User: 0"
-                print "AI:   0"
+            hands_tied +=1
 
         hand_counter+=1
-        button+=1
 
-hu_openface(1)
+        if hand_counter == hand_target:
+            print "=================    SESSION RESULTS    =================="
+            print "User won %s units" % (user_total_units)
+            print "AI won %s units" % (ai_total_units) 
+            print "User won %s hands, fouled %s hands" % (user_hands_won,user_hands_fouled)
+            print "AI won %s hands, fouled %s hands" % (ai_hands_won,ai_hands_fouled)
+
+hu_openface(2)
+
+
