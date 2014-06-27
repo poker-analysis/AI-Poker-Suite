@@ -361,7 +361,28 @@ def ai_place_draws(front,middle,back,draw):
     elif len(front) == 2 and len(middle) == 5 and len(back) == 5:
         return "front"
 
-    # Algorithm for placement (right now, dummy algorithm for testing)
+    # Algorithm for placement
+    # Rules:
+    # 1. If draw improves hand in the back, add it:
+    #   a. flush draw -> extend flush draw
+    #   b. hand equal to or stronger than trips -> add it
+    # 2. If middle value increases but still < back, add to middle
+    # 3. If front value increases and front < middle < back, add it
+
+    if len(back) < 5:
+        if flush_draw_check(back)[0] == True and flush_draw_check(back)[1] == draw[0][1]:
+            return "back"
+        elif hand_evaluator(back+draw)[1] >= 4 and hand_evaluator(back+draw)[1] > hand_evaluator(back)[1]:
+            return "back"
+    elif len(middle) < 5:
+        if hand_evaluator(middle+draw)[1] < hand_evaluator(back)[1]:
+            return "middle"
+    elif len(middle) < 3:
+        if hand_evaluator(front+draw)[1] > hand_evaluator(front)[1]:
+            if hand_evaluator(back)[1] > hand_evaluator(middle)[1] > hand_evaluator(front)[1]:
+                return "middle"
+
+    # Vanilla placement (for dummy testing)
     if len(front) < 3: return "front"
     elif len(middle) < 5: return "middle"
     elif len(back) < 5: return "back"
