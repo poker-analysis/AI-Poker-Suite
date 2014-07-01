@@ -457,9 +457,43 @@ def hu_openface(hand_target):
         cpu_middle = []
         cpu_back = []
         print "Your starting hand is " + " ".join(user_hand)
+        print button 
+        # If button is even, user has the button and CPU acts first
+        if button % 2 == 0:
+            cpu_front.extend(ai_starting_hand(cpu_hand)[0])
+            cpu_middle.extend(ai_starting_hand(cpu_hand)[1])
+            cpu_back.extend(ai_starting_hand(cpu_hand)[2])
+
+            for card in user_hand:
+                place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
+
+                print "Your starting hand was " + "".join(user_hand)
+                print "-----------------AI HAND-----------------"
+                print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
+
+                if place.lower() == "f" and len(front)<3: front.append(card)
+                elif place.lower() == "m" and len(middle)<5: middle.append(card)
+                elif place.lower() == "b" and len(back)<5: back.append(card)
+
+                # Error Handling
+                while place.lower() not in ("f", "m", "b") or \
+                (front.count(card) == 0 and middle.count(card)==0 and back.count(card)==0): 
+
+                    place = raw_input("Please enter F, M or B: ")
+
+                    if place.lower() == "f" and len(front)<3: front.append(card)
+                    elif place.lower() == "m" and len(middle)<5: middle.append(card)
+                    elif place.lower() == "b" and len(back)<5: back.append(card)
+                if len(front+middle+back)<5:
+                    print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
+
+            print "-----------------AI HAND-----------------"
+            print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
+            print "----------------USER HAND----------------"
+            print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
         # If button is odd, CPU has the button and user acts first
-        if button == 1:
+        elif button % 2 == 1:
             # Prompt user for placement of initial starting hand
             for card in user_hand:
                 place = raw_input("Where do you want to place " + str(card) + " : F, M or B? ")
@@ -602,6 +636,7 @@ def hu_openface(hand_target):
             hands_tied +=1
 
         hand_counter+=1
+        button += 1
 
         if hand_counter == hand_target:
             print "=================    SESSION RESULTS    =================="
