@@ -1,4 +1,7 @@
 from itertools import combinations
+from itertools import izip as zip,count
+from collections import Counter
+from random import randrange
 
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
@@ -12,80 +15,138 @@ def create_deck():
 
 
 def holdem_evaluator(total_board):
-    # Need to rewrite optimized 7 card evaluator
-
+    # Useful Variables
+    indices = set(sorted([values.index(card[0]) for card in total_board]))
+    flush_suit = ""
+    for suit in suits:
+        if "".join(total_board).count(suit) >= 5:
+            flush_suit = suit
+    flush_indices = [values.index(card[0]) for card in total_board if card[1] == flush_suit]
+    pairs = [[card[:-1] for card in total_board].count(x) for x in values]
+    
     # Royal Flush
     royal_flushes = [["Ah","Kh","Jh","Th","Qh"] , ["Ac","Kc","Jc","Tc","Qc"] ,
     ["Ad","Kd","Jd","Td","Qd"], ["As","Ks","Js","Ts","Qs"]]
 
     for x in royal_flushes:
         if set.issubset(set(x),set(total_board)) == True:
-            return "Royal Flush"
+            return "Royal Flush", 9, 0
 
     # Straight Flush
-    # Check if there are > five cards that have same suit, if there are, check 
-    # among cards with same suit if there are 5 in a row
+    for x in sorted(list(flush_indices))[::-1]:
+        if flush_indices.count(x-1) and flush_indices.count(x-2) and \
+        flush_indices.count(x-3) and flush_indices.count(x-4):
+            return "Straight Flush", 8, x + 2
+    if set.issubset(set([12,0,1,2,3]),flush_indices):
+        return "Straight Flush", 8, 0
 
     # Quads
-    # return [values.index(x[0]) for x in total_board], 4 of an item
+    if [x for x, y in Counter([card[:-1] for card in total_board]).items() if y == 4] != []:
+        quad = [[],[]]
+        for x in xrange(12,-1,-1):
+            if pairs[x] == 4:
+                quad[0].append(x+2)
+            elif pairs[x] > 0:
+                quad[1].append(x+2)
+        return "Quads", 7, max(quad[0])*100+max(quad[1])
 
     # Full House
-    # return [values.index(x[0]) for x in total_board], 3 + 2
+    if pairs.count(2) + pairs.count(3) >= 2 and pairs.count(3)>0:
+        hand_values = [[],[]]
+        for x in xrange(12,-1,-1):
+            if pairs[x] == 3:
+                if len(hand_values[0]) == 1:
+                    hand_values[1].append(x+2)
+                else:
+                    hand_values[0].append(x+2)
+            elif pairs[x] == 2:
+                hand_values[1].append(x+2)
+        return "Full House", 6, max(hand_values[0])*100 + max(hand_values[1])
 
     # Flush
     for suit in suits:
         if "".join(total_board).count(suit) >= 5:
-            return "Flush"
+            return "Flush",5,sorted(list(indices)[-5:])[::-1]
 
     # Straight
+    for x in sorted(list(indices))[::-1]:
+        if list(indices).count(x-1) and list(indices).count(x-2) and \
+        list(indices).count(x-3) and list(indices).count(x-4):
+            return "Straight",4,x+2
+    if set.issubset(set([12,0,1,2,3]),indices):
+        return "Straight", 4, 0
+
     # Trips
+    if max(pairs) == 3:
+        hand_values = [pairs.index(3)+2]
+        for x in xrange(12,-1,-1):
+            if len(hand_values) == 3:
+                break
+            if pairs[x] == 1:
+                hand_values.append(x+2)
+        return "Trips", 3, hand_values[0] * 10000 + hand_values[1] * 100 + \
+        hand_values[2] * 1
+
     # Two Pair
+    if pairs.count(2) >= 2:
+        hand_values = [i+2 for i, j in zip(count(), pairs) if j == 2][::-1][:2]
+        for x in xrange(12,-1,-1):
+            if len(hand_values) == 3:
+                break
+            if pairs[x] == 1:
+                hand_values.append(x+2)
+        return "Two Pair", 2, hand_values[0] * 10000 + hand_values[1] * 100 + \
+        hand_values[2] * 1
+
     # One Pair
+    if pairs.count(2) == 1:
+        hand_values = [pairs.index(2)+2]
+        for x in xrange(12,-1,-1):
+            if len(hand_values) == 4:
+                break
+            if pairs[x] == 1:
+                hand_values.append(x+2)
+        return "Pair", 1 , hand_values[0]*1000000 + hand_values[1]*10000 + \
+        hand_values[2]*100 + hand_values[3]
+
     # High Card
+    else: 
+        return "High Card", 0, max([values.index(x[0]) for x in total_board])
 
 
 def plo_evaluator(total_board):
     pass
 
 
-def equity_simulator():
-    game = raw_input("""
-        Select a game type:
-        1. Texas Hold Em
-        2. Pot Limit Omaha
-        3. Seven Card Stud\n""")
-
-    if game == "1": 
-        holdem_simulator()
-    elif game == "2":
-        omaha_simulator()
-    elif game == "3":
-        stud_simulator()
-
-
-def holdem_simulator():
-    user_hand = "" 
-    cpu_hand = ""
+def holdem_equity_calculator(hand1,hand2):
     user_wins = 0
     cpu_wins = 0
     ties = 0
-
-    while len(user_hand) < 4:
-        user_hand = raw_input("Enter your hand: ")
-    while len(cpu_hand) < 4:
-        cpu_hand = raw_input("Enter the computer's hand: ")
-    deck = create_deck()
-
-    flop = raw_input("Enter a flop such as AhKh2s or enter if preflop all-in: ")
-    if len(flop) == 6:
-        turn = raw_input("Enter a turn such as 4c or hit enter if no turn: ")
-    if len(turn) == 2:
-        river = raw_input("Enter a river such as 4s or hit enter if no river: ")
     
-    deck.remove(user_hand[:2]), deck.remove(user_hand[2:])
-    deck.remove(cpu_hand[:2]), deck.remove(cpu_hand[2:])
+    deck = create_deck()
+    deck.remove(hand1[:2]), deck.remove(hand1[2:])
+    deck.remove(hand2[:2]), deck.remove(hand2[2:])
 
-    # Because the number of combinations is bounded at 1.7m, we can calculate it 
-    # through brute force of all possible combinationss
+    user_hand = [hand1[:2],hand1[2:]]
+    cpu_hand = [hand2[:2],hand2[2:]]
 
-print holdem_evaluator(["Ah","Kh","Th","Jh","Qs","Js","9s"])
+    combos = list(combinations(deck,5))
+
+    while user_wins + cpu_wins + ties < 4000:
+        y = randrange(0,1712303)
+        x = list(combos[y])
+        if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
+            user_wins += 1
+        elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
+            cpu_wins += 1
+        else:
+            if holdem_evaluator(x+user_hand)[2] > holdem_evaluator(x+cpu_hand)[2]:
+                user_wins += 1
+            elif holdem_evaluator(x+cpu_hand)[2] < holdem_evaluator(x+user_hand)[2]:
+                cpu_wins += 1
+            else:
+                ties+=1
+
+    print "====================SIMULATION RESULTS===================="
+    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
