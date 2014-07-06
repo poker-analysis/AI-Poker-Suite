@@ -2,6 +2,7 @@ from itertools import combinations
 from itertools import izip as zip,count
 from collections import Counter
 from random import randrange
+import time 
 
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
@@ -119,6 +120,9 @@ def plo_evaluator(total_board):
 
 
 def holdem_equity_calculator(hand1,hand2):
+    
+    start = time.time()
+
     user_wins = 0
     cpu_wins = 0
     ties = 0
@@ -131,10 +135,8 @@ def holdem_equity_calculator(hand1,hand2):
     cpu_hand = [hand2[:2],hand2[2:]]
 
     combos = list(combinations(deck,5))
-
-    while user_wins + cpu_wins + ties < 4000:
-        y = randrange(0,1712303)
-        x = list(combos[y])
+    for x in xrange(0,1712303,100):
+        x = list(combos[x])
         if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
             user_wins += 1
         elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
@@ -146,7 +148,11 @@ def holdem_equity_calculator(hand1,hand2):
                 cpu_wins += 1
             else:
                 ties+=1
-
+    
     print "====================SIMULATION RESULTS===================="
     print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    elapsed = time.time() - start
+    print "Calculated 17123 runs in: %s seconds" % (elapsed) 
+
+holdem_equity_calculator("AhAs","KhKs")
