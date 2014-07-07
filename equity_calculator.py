@@ -6,6 +6,7 @@ import time
 
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
+lo_values = ["A","2","3","4","5","6","7","8","9","T","J","Q","K"]
 
 def create_deck():
     deck = []
@@ -114,6 +115,17 @@ def holdem_evaluator(total_board):
     else: 
         return "High Card", 0, max([values.index(x[0]) for x in total_board])
 
+
+def razz_evaluator(hand1,hand2):
+    h1_lo = []
+    h2_lo = []
+
+    h1_set = sorted(set([lo_values.index(x[0]) for x in hand1]))
+    h2_set = sorted(set([lo_values.index(x[0]) for x in hand2]))
+
+    # Add to each array the lowest unpaired elements
+    # Add to each array the paired elements until hand complete
+    print h1_set,h2_set
 
 def plo_evaluator(total_board):
     pass
