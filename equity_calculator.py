@@ -119,7 +119,7 @@ def plo_evaluator(total_board):
     pass
 
 
-def holdem_equity_calculator(hand1,hand2):
+def holdem_preflop_equity_calculator(hand1,hand2):
     
     start = time.time()
 
@@ -135,7 +135,7 @@ def holdem_equity_calculator(hand1,hand2):
     cpu_hand = [hand2[:2],hand2[2:]]
 
     combos = list(combinations(deck,5))
-    for x in xrange(0,1712303,100):
+    for x in xrange(0,len(combos),100):
         x = list(combos[x])
         if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
             user_wins += 1
@@ -155,4 +155,49 @@ def holdem_equity_calculator(hand1,hand2):
     elapsed = time.time() - start
     print "Calculated 17123 runs in: %s seconds" % (elapsed) 
 
-holdem_equity_calculator("AhAs","KhKs")
+
+def holdem_postflop_equity_calculator(board,hand1,hand2):
+    # Because the number of computations is bounded at 990 hands, we can search
+    # exhaustively through all possible outcomes to calculate equity. 
+    start = time.time()
+
+    user_wins = 0
+    cpu_wins = 0
+    ties = 0
+
+    user_hand = [hand1[:2],hand1[2:]]
+    cpu_hand = [hand2[:2],hand2[2:]]
+    
+    deck = create_deck()
+    for x in xrange(0,len(board),2):
+        if x+2 > len(board) - 1:
+            deck.remove(board[x:])
+            user_hand.append(board[x:])
+            cpu_hand.append(board[x:])
+        else:
+            deck.remove(board[x:x+2])
+            user_hand.append(board[x:x+2])
+            cpu_hand.append(board[x:x+2])
+
+    deck.remove(hand1[:2]), deck.remove(hand1[2:])
+    deck.remove(hand2[:2]), deck.remove(hand2[2:])
+    
+    combos = list(combinations(deck,7 - len(user_hand)))
+    for x in xrange(0,len(combos)):
+        x = list(combos[x])
+        if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
+            user_wins += 1
+        elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
+            cpu_wins += 1
+        else:
+            if holdem_evaluator(x+user_hand)[2] > holdem_evaluator(x+cpu_hand)[2]:
+                user_wins += 1
+            elif holdem_evaluator(x+cpu_hand)[2] < holdem_evaluator(x+user_hand)[2]:
+                cpu_wins += 1
+            else:
+                ties+=1
+    print "====================SIMULATION RESULTS===================="
+    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    elapsed = time.time() - start
+    print "Exhaustive search. Calculated in: %s seconds" % (elapsed) 
