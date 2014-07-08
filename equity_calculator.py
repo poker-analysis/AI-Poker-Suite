@@ -117,15 +117,36 @@ def holdem_evaluator(total_board):
 
 
 def razz_evaluator(hand1,hand2):
-    h1_lo = []
-    h2_lo = []
+    h1_lo = sorted(set([lo_values.index(x[0]) for x in hand1]))
+    h2_lo = sorted(set([lo_values.index(x[0]) for x in hand2]))
+    h1 = sorted([lo_values.index(x[0]) for x in hand1])
+    h2 = sorted([lo_values.index(x[0]) for x in hand2])
 
-    h1_set = sorted(set([lo_values.index(x[0]) for x in hand1]))
-    h2_set = sorted(set([lo_values.index(x[0]) for x in hand2]))
+    h1_diff = list((Counter(h1)-Counter(h1_lo)).elements())
+    h2_diff = list((Counter(h2)-Counter(h2_lo)).elements())
 
-    # Add to each array the lowest unpaired elements
-    # Add to each array the paired elements until hand complete
-    print h1_set,h2_set
+    while len(h1_lo) < 5:
+        if h1_lo.count(min(h1_diff)) < 2:
+            h1_lo.append(min(h1_diff))
+            h1_diff.remove(min(h1_diff))
+        else:
+            for x in h1_diff:
+                if h1_lo.count(x) < 2:
+                    h1_lo.append(x)
+
+    while len(h2_lo) < 5:
+        if h2_lo.count(min(h2_diff)) < 2:
+            h2_lo.append(min(h2_diff))
+            h2_diff.remove(min(h2_diff))
+        else:
+            h2_lo.append(h2_diff[0])
+    print h1_lo,h2_lo
+    if list(set(h1_lo)) == h1_lo:
+        return h1_lo < h2_lo
+
+    else:
+        # this condition needs to handle pair/trips check
+        pass
 
 def plo_evaluator(total_board):
     pass
@@ -213,3 +234,6 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
     print "Exhaustive search. Calculated in: %s seconds" % (elapsed) 
+
+print razz_evaluator(["As","Ah","As","3h","3h","3s","4h"],["K","K","2","2","3","4","5"])
+ 
