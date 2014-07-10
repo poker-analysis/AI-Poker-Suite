@@ -8,7 +8,6 @@ from itertools import combinations
 # 3. AI vs AI
 # 4. optimality (as % of Greedy Chinese)
 # 5. Refactoring Inefficiencies
-# 6. PEP 8 Style Guide
 
 # global variables
 suits = ["s", "h", "d", "c"]
@@ -16,11 +15,7 @@ values = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
 
 
 def create_deck():
-    deck = []
-    for value in values:
-        for suit in suits:
-            deck.append(value + suit)
-    return deck
+    return [value+suit for suit in suits for value in values]
 
 
 def random_hand():
@@ -517,7 +512,6 @@ def greedy_chinese_algorithm(front, middle, back):
 
 def hu_openface(hand_target):
     hand_counter = 0
-    button = 1
 
     # Global Variables (Stats)
     user_hands_won = 0
@@ -553,7 +547,7 @@ def hu_openface(hand_target):
         cpu_back = []
         print "Your starting hand is " + " ".join(user_hand)
         # If button is even, user has the button and CPU acts first
-        if button % 2 == 0:
+        if hand_counter % 2 == 0:
             cpu_front.extend(ai_starting_hand(cpu_hand)[0])
             cpu_middle.extend(ai_starting_hand(cpu_hand)[1])
             cpu_back.extend(ai_starting_hand(cpu_hand)[2])
@@ -594,7 +588,7 @@ def hu_openface(hand_target):
             print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
         # If button is odd, CPU has the button and user acts first
-        elif button % 2 == 1:
+        elif hand_counter % 2 == 1:
             # Prompt user for placement of initial starting hand
             for card in user_hand:
                 place = raw_input(
@@ -653,6 +647,12 @@ def hu_openface(hand_target):
                     cpu_middle.append(ai_draw)
                 elif ai_place_draws(cpu_front, cpu_middle, cpu_back, ai_draw) == "back":
                     cpu_back.append(ai_draw)
+
+            if hand_counter % 2 == 0:
+                print "-----------------AI HAND-----------------"
+                print " ".join(cpu_back) + "\n" + " ".join(cpu_middle) + "\n" + " ".join(cpu_front)
+                print "----------------USER HAND----------------"
+                print " ".join(front) + "\n" + " ".join(middle) + "\n" + " ".join(back)
 
             # Provide user with the odds that they will foul for the sweat
             if len(front) + len(middle) + len(back) == 12:
@@ -759,7 +759,6 @@ def hu_openface(hand_target):
             hands_tied += 1
 
         hand_counter += 1
-        button += 1
 
         if hand_counter == hand_target:
             print "=================    SESSION RESULTS    =================="
@@ -768,4 +767,4 @@ def hu_openface(hand_target):
             print "User won %s hands, fouled %s hands" % (user_hands_won, user_hands_fouled)
             print "AI won %s hands, fouled %s hands" % (ai_hands_won, ai_hands_fouled)
 
-hu_openface(10)
+hu_openface(3)
