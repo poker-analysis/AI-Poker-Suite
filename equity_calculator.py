@@ -8,14 +8,6 @@ suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
 lo_values = ["A","2","3","4","5","6","7","8","9","T","J","Q","K"]
 
-def create_deck():
-    deck = []
-    for value in values: 
-        for suit in suits:
-            deck.append(value + suit)
-    return deck 
-
-
 def holdem_evaluator(total_board):
     # Useful Variables
     indices = set(sorted([values.index(card[0]) for card in total_board]))
@@ -127,59 +119,57 @@ def razz_evaluator(hand1,hand2):
     h1_diff = list((Counter(h1)-Counter(h1_lo)).elements())
     h2_diff = list((Counter(h2)-Counter(h2_lo)).elements())
 
-    h1_length = len(h1_lo)
-    h2_length = len(h2_lo)
+    h1_strength = 0
+    h2_strength = 0
 
     while len(h1_lo) < 5:
-        if h1_lo.count(min(h1_diff)) < 2 or h1_length == 2:
-            h1_lo.append(min(h1_diff))
-            h1_diff.remove(min(h1_diff))
-        else:
-            for x in h1_diff:
-                if h1_lo.count(x) < 2:
-                    h1_lo.append(x)
+        for x in h1_diff:
+            if h1_lo.count(x) <= h1_strength and len(h1_lo) < 5:
+                h1_lo.append(x)
+                h1_diff.remove(x)
+        h1_strength+=1
 
     while len(h2_lo) < 5:
-        if h2_lo.count(min(h2_diff)) < 2 or h2_length == 2:
-            h2_lo.append(min(h2_diff))
-            h2_diff.remove(min(h2_diff))
-        else:
-            for x in h2_diff:
-                if h2_lo.count(x) < 2:
-                    h2_lo.append(x)
-    
+        for x in h2_diff:
+            if h2_lo.count(x) <= h2_strength and len(h2_lo) < 5:
+                h2_lo.append(x)
+                h2_diff.remove(x)
+        h2_strength+=1
+
+    h1_indices = [h1_lo.count(x) for x in range(13)] 
+    h2_indices = [h2_lo.count(x) for x in range(13)]
+
     if h1_lo == h2_lo:
         return "Tie"
 
     elif list(set(h1_lo)) == h1_lo and list(set(h2_lo)) == h2_lo:
         return h1_lo < h2_lo
 
-    # Issue Log
-    # 1. Refactor
-    # 2. Test Cases
-    # 3. Equity Calculator
+    elif h1_indices.count(3) != h2_indices.count(3):
+        return h1_indices.count(3) < h2_indices.count(3)
+
+    elif h1_indices.count(2) != h2_indices.count(2):
+        return h1_indices.count(2) < h2_indices.count(2)
+
+    elif h1_indices.count(3) == h2_indices.count(3):
+        if h1_indices.index(3) != h2_indices.index(3):
+            return h1_indices.index(3) < h2_indices.index(3)
+        else:
+            return h2_indices.index(2) < h2_indices.index(2)
+
+    elif h1_indices.count(2) == h2_indices.count(2) == 1:
+        if h1_indices.index(2) != h2_indices.index(2):
+            return h1_indices.index(2) < h2_indices.index(2)
+        else:
+            return [x for x in h1_indices if h1_indices.index(x)==1] < \
+            [x for x in h2_indices if h2_indices.index(x)==1]
+
+    elif h1_indices.count(2) == h2_indices.count(2) == 2:
+        return h1_lo < h2_lo
 
     else:
-        h1_indices = [h1_lo.count(x) for x in range(13)] 
-        h2_indices = [h2_lo.count(x) for x in range(13)]
-        if max(h1_indices) != max(h2_indices):
-            return max(h1_indices) < max(h2_indices)
-        else:
-            if h1_indices.index(max(h1_indices)) != h2_indices.index(max(h2_indices)):
-                return h1_indices.index(max(h1_indices)) < h2_indices.index(max(h2_indices))
-            else:
-                h1_indices.remove(max(h1_indices))
-                h2_indices.remove(max(h2_indices))
-                if h1_indices.index(max(h1_indices)) != h2_indices.index(max(h2_indices)):
-                    return h1_indices.index(max(h1_indices)) < h2_indices.index(max(h2_indices))
-                else:
-                    h1_indices.remove(max(h1_indices))
-                    h2_indices.remove(max(h2_indices))
-                    if h1_indices.index(max(h1_indices)) != h2_indices.index(max(h2_indices)):
-                        return h1_indices.index(max(h1_indices)) < h2_indices.index(max(h2_indices))
-                    else:
-                        return "Tie"
-
+        return "Tie"
+    
 def plo_evaluator(total_board):
     pass
 
@@ -192,7 +182,7 @@ def holdem_preflop_equity_calculator(hand1,hand2):
     cpu_wins = 0
     ties = 0
     
-    deck = create_deck()
+    deck = [value+suit for suit in suits for value in values]
     deck.remove(hand1[:2]), deck.remove(hand1[2:])
     deck.remove(hand2[:2]), deck.remove(hand2[2:])
 
@@ -233,7 +223,7 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
     user_hand = [hand1[:2],hand1[2:]]
     cpu_hand = [hand2[:2],hand2[2:]]
     
-    deck = create_deck()
+    deck = [value+suit for suit in suits for value in values]
     for x in xrange(0,len(board),2):
         if x+2 > len(board) - 1:
             deck.remove(board[x:])
@@ -248,8 +238,8 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
     deck.remove(hand2[:2]), deck.remove(hand2[2:])
     
     combos = list(combinations(deck,7 - len(user_hand)))
-    for x in xrange(0,len(combos)):
-        x = list(combos[x])
+    for x in combos:
+        x = list(x)
         if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
             user_wins += 1
         elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
