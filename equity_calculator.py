@@ -139,10 +139,13 @@ def razz_evaluator(hand1,hand2):
     h1_indices = [h1_lo.count(x) for x in range(13)] 
     h2_indices = [h2_lo.count(x) for x in range(13)]
 
+    h1_lo = sorted(h1_lo)[::-1][-5:]
+    h2_lo = sorted(h2_lo)[::-1][-5:]
+
     if h1_lo == h2_lo:
         return "Tie"
 
-    elif list(set(h1_lo)) == h1_lo and list(set(h2_lo)) == h2_lo:
+    elif sorted(list(set(h1_lo))) == sorted(h1_lo) and sorted(list(set(h2_lo))) == sorted(h2_lo):
         return h1_lo < h2_lo
 
     elif h1_indices.count(3) != h2_indices.count(3):
@@ -302,6 +305,8 @@ def razz_equity_calculator(hand1,hand2):
         elif razz_evaluator(user_hand,cpu_hand) == "Tie":
             ties += 1
         
+        print "".join(user_hand),"".join(cpu_hand), razz_evaluator(user_hand,cpu_hand)
+
         for x in added_cards:
             deck.append(x)
             if user_hand.count(x) > 0: 
@@ -313,4 +318,4 @@ def razz_equity_calculator(hand1,hand2):
     print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
-    print "Random search. Calculated in: %s seconds" % (elapsed) 
+    print "Random search. Calculated in: %s seconds" % (elapsed)
