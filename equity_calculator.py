@@ -207,11 +207,11 @@ def holdem_preflop_equity_calculator(hand1,hand2):
             else:
                 ties+=1
     
-    print "====================SIMULATION RESULTS===================="
+    print "====================HOLD EM SIMULATION RESULTS===================="
     print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
-    print "Calculated 17123 runs in: %s seconds" % (elapsed) 
+    print "Random search. Calculated 17123 runs in: %s seconds" % (elapsed) 
 
 
 def holdem_postflop_equity_calculator(board,hand1,hand2):
@@ -254,7 +254,7 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
                 cpu_wins += 1
             else:
                 ties+=1
-    print "====================SIMULATION RESULTS===================="
+    print "====================HOLD EM SIMULATION RESULTS===================="
     print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
@@ -305,8 +305,6 @@ def razz_equity_calculator(hand1,hand2):
         elif razz_evaluator(user_hand,cpu_hand) == "Tie":
             ties += 1
         
-        print "".join(user_hand),"".join(cpu_hand), razz_evaluator(user_hand,cpu_hand)
-
         for x in added_cards:
             deck.append(x)
             if user_hand.count(x) > 0: 
@@ -314,7 +312,70 @@ def razz_equity_calculator(hand1,hand2):
             if cpu_hand.count(x) > 0:
                 cpu_hand.remove(x)
 
-    print "====================SIMULATION RESULTS===================="
+    print "====================RAZZ SIMULATION RESULTS===================="
+    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    elapsed = time.time() - start
+    print "Random search. Calculated in: %s seconds" % (elapsed)
+
+
+def stud_equity_calculator(hand1,hand2):
+    if len(hand1)!=len(hand2):
+        return "Please enter two legal hands."
+    deck = [value+suit for suit in suits for value in values]
+    
+    user_hand = []
+    cpu_hand = []
+
+    user_wins = 0
+    cpu_wins = 0
+    ties = 0
+
+    for x in xrange(0,len(hand1),2):
+        if x+2 > len(hand1) - 1:
+            deck.remove(hand1[x:]), user_hand.append(hand1[x:])
+            deck.remove(hand2[x:]), cpu_hand.append(hand2[x:])
+
+        else:
+            deck.remove(hand1[x:x+2]), user_hand.append(hand1[x:x+2])
+            deck.remove(hand2[x:x+2]), cpu_hand.append(hand2[x:x+2])
+    start = time.time()
+    while user_wins + cpu_wins + ties < 5000:
+
+        added_cards = []
+
+        while len(user_hand) < 7:
+            x = randrange(len(deck))
+            user_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
+        
+        while len(cpu_hand) < 7:
+            x = randrange(len(deck))
+            cpu_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
+
+        if holdem_evaluator(user_hand)[1] > holdem_evaluator(cpu_hand)[1]:
+            user_wins += 1
+        elif holdem_evaluator(user_hand)[1] < holdem_evaluator(cpu_hand)[1]:
+            cpu_wins += 1
+        else:
+            if holdem_evaluator(user_hand)[2] > holdem_evaluator(cpu_hand)[2]:
+                user_wins += 1
+            elif holdem_evaluator(user_hand)[2] < holdem_evaluator(cpu_hand)[2]:
+                cpu_wins += 1
+            else: 
+                ties += 1
+        
+        for x in added_cards:
+            deck.append(x)
+            if user_hand.count(x) > 0: 
+                user_hand.remove(x)
+            if cpu_hand.count(x) > 0:
+                cpu_hand.remove(x)
+
+    print "====================STUD SIMULATION RESULTS===================="
     print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
