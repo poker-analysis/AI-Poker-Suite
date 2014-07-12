@@ -343,37 +343,56 @@ def razz_equity_calculator(query):
     print "Random search. Calculated in: %s seconds" % (elapsed)
 
 
-def stud_equity_calculator(hand1,hand2):
-    if len(hand1)!=len(hand2):
-        return "Please enter two legal hands."
-    deck = [value+suit for suit in suits for value in values]
-    
-    user_hand = []
-    cpu_hand = []
+def stud_equity_calculator(query):
+    query = query.split()
 
+    deck = [value+suit for suit in suits for value in values]
+    hand1 = [x for x in query[0] if x != "*"]
+    hand2 = [x for x in query[2] if x != "*"]
+    
     user_wins = 0
     cpu_wins = 0
     ties = 0
 
-    for x in xrange(0,len(hand1),2):
-        if x+2 > len(hand1) - 1:
-            deck.remove(hand1[x:]), user_hand.append(hand1[x:])
-            deck.remove(hand2[x:]), cpu_hand.append(hand2[x:])
+    user_hand = ["".join(x) for x in zip(\
+                    [x for x in hand1 if hand1.index(x) % 2 == 0],\
+                    [x for x in hand1 if hand1.index(x) % 2 == 1])
+                ]
 
-        else:
-            deck.remove(hand1[x:x+2]), user_hand.append(hand1[x:x+2])
-            deck.remove(hand2[x:x+2]), cpu_hand.append(hand2[x:x+2])
+    cpu_hand = ["".join(x) for x in zip(\
+                    [x for x in hand2 if hand2.index(x) % 2 == 0],\
+                    [x for x in hand2 if hand2.index(x) % 2 == 1])
+               ]
+    
+    for x in user_hand:
+        deck.remove(x)
+
+    for x in cpu_hand:
+        deck.remove(x)
+
     start = time.time()
     while user_wins + cpu_wins + ties < 5000:
 
         added_cards = []
+
+        while len(user_hand) < 3:
+            x = randrange(len(deck))
+            user_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
+        
+        while len(cpu_hand) < 3:
+            x = randrange(len(deck))
+            cpu_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
 
         while len(user_hand) < 7:
             x = randrange(len(deck))
             user_hand.append(deck[x])
             added_cards.append(deck[x])
             deck.remove(deck[x])
-        
+
         while len(cpu_hand) < 7:
             x = randrange(len(deck))
             cpu_hand.append(deck[x])
@@ -387,10 +406,10 @@ def stud_equity_calculator(hand1,hand2):
         else:
             if holdem_evaluator(user_hand)[2] > holdem_evaluator(cpu_hand)[2]:
                 user_wins += 1
-            elif holdem_evaluator(user_hand)[2] < holdem_evaluator(cpu_hand)[2]:
+            elif holdem_evaluator(cpu_hand)[2] < holdem_evaluator(user_hand)[2]:
                 cpu_wins += 1
-            else: 
-                ties += 1
+            else:
+                ties+=1
         
         for x in added_cards:
             deck.append(x)
@@ -400,7 +419,7 @@ def stud_equity_calculator(hand1,hand2):
                 cpu_hand.remove(x)
 
     print "====================STUD SIMULATION RESULTS===================="
-    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print query[0] + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print query[2] + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
     print "Random search. Calculated in: %s seconds" % (elapsed)
