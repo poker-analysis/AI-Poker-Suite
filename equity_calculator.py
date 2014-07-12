@@ -262,51 +262,60 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
  
 
 def razz_equity_calculator(query):
-    # Syntax:
-    # Initially support static vs dynamic range, then add more features
+    # Supported Expanded Queries:
     # 1) x-syntax; xKh2h will test your range against this range
     # 2) Weighted Range: range against different hands with different weights
     #    Example: Ah2h3h vs 30 4h5h6h 30 6h7h8h 30 Th2h3h
-    # Possible queries to handle :
-    # hand vs hand
-    # x-syntax
-    # weighted range
-    deck = [value+suit for suit in suits for value in values]
-    
-    user_hand = []
-    cpu_hand = []
 
+    query = query.split()
+
+    deck = [value+suit for suit in suits for value in values]
+    hand1 = [x for x in query[0] if x != "*"]
+    hand2 = [x for x in query[2] if x != "*"]
+    
     user_wins = 0
     cpu_wins = 0
     ties = 0
 
-    syntax_reducer_hand2 = [[],[]]
+    user_hand = ["".join(x) for x in zip(\
+                    [x for x in hand1 if hand1.index(x) % 2 == 0],\
+                    [x for x in hand1 if hand1.index(x) % 2 == 1])
+                ]
 
-    for x in list(hand2):
-        if x == "x": 
-            syntax_reducer_hand2[0].append(x)
-        else:
-            syntax_reducer_hand2[1].append(x)
+    cpu_hand = ["".join(x) for x in zip(\
+                    [x for x in hand2 if hand2.index(x) % 2 == 0],\
+                    [x for x in hand2 if hand2.index(x) % 2 == 1])
+               ]
+    
+    for x in user_hand:
+        deck.remove(x)
 
-    for x in xrange(0,len(hand1),2):
-        if x+2 > len(hand1) - 1:
-            deck.remove(hand1[x:]), user_hand.append(hand1[x:])
-            deck.remove(hand2[x:]), cpu_hand.append(hand2[x:])
+    for x in cpu_hand:
+        deck.remove(x)
 
-        else:
-            deck.remove(hand1[x:x+2]), user_hand.append(hand1[x:x+2])
-            deck.remove(hand2[x:x+2]), cpu_hand.append(hand2[x:x+2])
     start = time.time()
     while user_wins + cpu_wins + ties < 5000:
 
         added_cards = []
+
+        while len(user_hand) < 3:
+            x = randrange(len(deck))
+            user_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
+        
+        while len(cpu_hand) < 3:
+            x = randrange(len(deck))
+            cpu_hand.append(deck[x])
+            added_cards.append(deck[x])
+            deck.remove(deck[x])
 
         while len(user_hand) < 7:
             x = randrange(len(deck))
             user_hand.append(deck[x])
             added_cards.append(deck[x])
             deck.remove(deck[x])
-        
+
         while len(cpu_hand) < 7:
             x = randrange(len(deck))
             cpu_hand.append(deck[x])
@@ -328,8 +337,8 @@ def razz_equity_calculator(query):
                 cpu_hand.remove(x)
 
     print "====================RAZZ SIMULATION RESULTS===================="
-    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print query[0] + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
+    print query[2] + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
     print "Random search. Calculated in: %s seconds" % (elapsed)
 
@@ -395,6 +404,3 @@ def stud_equity_calculator(hand1,hand2):
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
     print "Random search. Calculated in: %s seconds" % (elapsed)
-
-print razz_equity_calculator("Ah2h5h","x4sKs")
-
