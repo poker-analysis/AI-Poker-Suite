@@ -207,11 +207,9 @@ def holdem_preflop_equity_calculator(hand1,hand2):
             else:
                 ties+=1
     
-    print "====================HOLD EM SIMULATION RESULTS===================="
-    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    elapsed = time.time() - start
-    print "Random search. Calculated 17123 runs in: %s seconds" % (elapsed) 
+    hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    return hand1,hand1_equity,hand2,hand2_equity
 
 
 def holdem_postflop_equity_calculator(board,hand1,hand2):
@@ -254,11 +252,9 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
                 cpu_wins += 1
             else:
                 ties+=1
-    print "====================HOLD EM SIMULATION RESULTS===================="
-    print hand1 + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    elapsed = time.time() - start
-    print "Exhaustive search. Calculated in: %s seconds" % (elapsed) 
+    hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    return hand1,hand1_equity,hand2,hand2_equity
  
 
 def razz_equity_calculator(query):
@@ -298,18 +294,6 @@ def razz_equity_calculator(query):
 
         added_cards = []
 
-        while len(user_hand) < 3:
-            x = randrange(len(deck))
-            user_hand.append(deck[x])
-            added_cards.append(deck[x])
-            deck.remove(deck[x])
-        
-        while len(cpu_hand) < 3:
-            x = randrange(len(deck))
-            cpu_hand.append(deck[x])
-            added_cards.append(deck[x])
-            deck.remove(deck[x])
-
         while len(user_hand) < 7:
             x = randrange(len(deck))
             user_hand.append(deck[x])
@@ -335,13 +319,9 @@ def razz_equity_calculator(query):
                 user_hand.remove(x)
             if cpu_hand.count(x) > 0:
                 cpu_hand.remove(x)
-
-    print "====================RAZZ SIMULATION RESULTS===================="
-    print query[0] + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print query[2] + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    elapsed = time.time() - start
-    print "Random search. Calculated in: %s seconds" % (elapsed)
-
+    hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    return query[0],hand1_equity,query[2],hand2_equity
 
 def stud_equity_calculator(query):
     query = query.split()
@@ -375,18 +355,6 @@ def stud_equity_calculator(query):
 
         added_cards = []
 
-        while len(user_hand) < 3:
-            x = randrange(len(deck))
-            user_hand.append(deck[x])
-            added_cards.append(deck[x])
-            deck.remove(deck[x])
-        
-        while len(cpu_hand) < 3:
-            x = randrange(len(deck))
-            cpu_hand.append(deck[x])
-            added_cards.append(deck[x])
-            deck.remove(deck[x])
-
         while len(user_hand) < 7:
             x = randrange(len(deck))
             user_hand.append(deck[x])
@@ -418,8 +386,6 @@ def stud_equity_calculator(query):
             if cpu_hand.count(x) > 0:
                 cpu_hand.remove(x)
 
-    print "====================STUD SIMULATION RESULTS===================="
-    print query[0] + " equity: %f" % ((user_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    print query[2] + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
-    elapsed = time.time() - start
-    print "Random search. Calculated in: %s seconds" % (elapsed)
+    hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    return query[0],hand1_equity,query[2],hand2_equity
