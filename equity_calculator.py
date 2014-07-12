@@ -261,9 +261,16 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
     print "Exhaustive search. Calculated in: %s seconds" % (elapsed) 
  
 
-def razz_equity_calculator(hand1,hand2):
-    if len(hand1)!=len(hand2):
-        return "Please enter two legal hands."
+def razz_equity_calculator(query):
+    # Syntax:
+    # Initially support static vs dynamic range, then add more features
+    # 1) x-syntax; xKh2h will test your range against this range
+    # 2) Weighted Range: range against different hands with different weights
+    #    Example: Ah2h3h vs 30 4h5h6h 30 6h7h8h 30 Th2h3h
+    # Possible queries to handle :
+    # hand vs hand
+    # x-syntax
+    # weighted range
     deck = [value+suit for suit in suits for value in values]
     
     user_hand = []
@@ -272,6 +279,14 @@ def razz_equity_calculator(hand1,hand2):
     user_wins = 0
     cpu_wins = 0
     ties = 0
+
+    syntax_reducer_hand2 = [[],[]]
+
+    for x in list(hand2):
+        if x == "x": 
+            syntax_reducer_hand2[0].append(x)
+        else:
+            syntax_reducer_hand2[1].append(x)
 
     for x in xrange(0,len(hand1),2):
         if x+2 > len(hand1) - 1:
@@ -380,3 +395,6 @@ def stud_equity_calculator(hand1,hand2):
     print hand2 + " equity: %f" % ((cpu_wins*1.0+ties/2.0)/(user_wins+cpu_wins+ties))
     elapsed = time.time() - start
     print "Random search. Calculated in: %s seconds" % (elapsed)
+
+print razz_equity_calculator("Ah2h5h","x4sKs")
+
