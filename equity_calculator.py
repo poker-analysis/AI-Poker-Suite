@@ -4,6 +4,12 @@ from collections import Counter
 from random import randrange
 import time 
 
+# Issues: 
+# Tiebreak of hold em high card hands
+# Omaha Evaluator
+# O8 Evaluator
+# 2-7 Evaluator
+
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
 lo_values = ["A","2","3","4","5","6","7","8","9","T","J","Q","K"]
@@ -23,7 +29,7 @@ def holdem_evaluator(total_board):
     ["Ad","Kd","Jd","Td","Qd"], ["As","Ks","Js","Ts","Qs"]]
 
     for x in royal_flushes:
-        if set.issubset(set(x),set(total_board)) == True:
+        if set.issubset(set(x),set(total_board)) is True:
             return "Royal Flush", 9, 0
 
     # Straight Flush
@@ -105,7 +111,7 @@ def holdem_evaluator(total_board):
 
     # High Card
     else: 
-        return "High Card", 0, max([values.index(x[0]) for x in total_board])
+        return "High Card", 0, sorted([values.index(card[0]) for card in total_board])[:5]
 
 
 def razz_evaluator(hand1,hand2):
@@ -172,8 +178,17 @@ def razz_evaluator(hand1,hand2):
 
     else:
         return "Tie"
-    
-def plo_evaluator(total_board):
+
+
+def plo_evaluator(hand,board):
+    pass
+
+
+def deuce_to_seven_evaluator(hand1,hand2):
+    return holdem_evaluator(hand1), holdem_evaluator(hand2)
+
+
+def o8_evaluator(hand,board):
     pass
 
 
@@ -389,3 +404,12 @@ def stud_equity_calculator(query):
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     return query[0],hand1_equity,query[2],hand2_equity
+
+# Tests
+a = holdem_evaluator(["Ah","2h","3h","4h","8s","9d","Jd"])[2]
+b = holdem_evaluator(["Ah","Kh","3h","4h","8s","9d","Jd"])[2]
+c = holdem_evaluator(["Ah","Kh","Qh","4h","8s","9d","Jd"])[2]
+
+print a
+print b 
+print c
