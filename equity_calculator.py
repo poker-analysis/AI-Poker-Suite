@@ -111,7 +111,7 @@ def holdem_evaluator(total_board):
 
     # High Card
     else: 
-        return "High Card", 0, sorted([values.index(card[0]) for card in total_board])[:5]
+        return "High Card", 0, sorted([values.index(card[0]) for card in total_board])[-5:][::-1]
 
 
 def razz_evaluator(hand1,hand2):
@@ -185,7 +185,17 @@ def plo_evaluator(hand,board):
 
 
 def deuce_to_seven_evaluator(hand1,hand2):
-    return holdem_evaluator(hand1), holdem_evaluator(hand2)
+    if holdem_evaluator(hand1)[1] < holdem_evaluator(hand2)[1]:
+        return True
+    elif holdem_evaluator(hand1)[1] < holdem_evaluator(hand2)[1]:
+        return False        
+    else:
+        if holdem_evaluator(hand1)[2] > holdem_evaluator(hand2)[2]:
+            return True
+        elif holdem_evaluator(hand1)[2] < holdem_evaluator(hand2)[2]:
+            return False
+        else:
+            return "Tie"
 
 
 def o8_evaluator(hand,board):
@@ -404,12 +414,3 @@ def stud_equity_calculator(query):
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     return query[0],hand1_equity,query[2],hand2_equity
-
-# Tests
-a = holdem_evaluator(["Ah","2h","3h","4h","8s","9d","Jd"])[2]
-b = holdem_evaluator(["Ah","Kh","3h","4h","8s","9d","Jd"])[2]
-c = holdem_evaluator(["Ah","Kh","Qh","4h","8s","9d","Jd"])[2]
-
-print a
-print b 
-print c
