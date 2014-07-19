@@ -6,21 +6,25 @@ lo_values = ["A","2","3","4","5","6","7","8","9","T","J","Q","K"]
 deck = [value+suit for suit in suits for value in lo_values]
 
 def ai_third_street(hero, villain_up, villain_action):
+    # Decision Node: (bring in | in position)
 
     hero_start = [hero[0],hero[1],hero[2]]
     hero_up = hero[2]
 
     # Rule 1: If hero has three cards below a 8, raise till cap 
     if all(lo_values.index(x[0]) < 8 for x in hero_start):
-        return "BP"
+        return "B|R"
 
     # Rule 2: If hero has lower up card than villain and villain card is T or higher, raise/call
     elif lo_values.index(hero_up[0]) < lo_values.index(villain_up[0]) and lo_values.index(villain_up[0]) >= 9:
-        return "RC"
+        return "|RC"
 
     # Rule 3: If hero has a pair, fold
     elif len(set([lo_values.index(x[0]) for x in hero_start])) < 3:
-        return "cF"
+        return "B|F"
+
+    else:
+        return "B|F"
 
 
 def ai_fourth_street(hero,villain,villain_actions):
@@ -91,6 +95,7 @@ def hu_razz():
     ai_hand = []  
     user_stack = 6000
     ai_stack = 6000
+    pot = 30
     user_action = ""
     ai_action = ""
 
@@ -107,25 +112,28 @@ def hu_razz():
     print "".join([x for x in user_hand])
     print " ".join([ai_hand[x] if x == 2 else "X" for x in xrange(3)])
 
+    print "User: %s" % (user_stack)
+    print "AI:   %s" % (ai_stack)
+
     if lo_values.index(user_hand[2][0]) > lo_values.index(ai_hand[2][0]):
         user_action = raw_input("b for bring in $30, c for complete to $100: ")
-
+        if user_action == "b":
+            print "User brings in for $30. "
+            pot += 30
+        if user_action == "c":
+            print "User completes to $100"
+            pot += 100
+        print pot
+        ai_action = ai_third_street(ai_hand,user_hand[2],None)
+        if ai_action[3] == "F":
+            print "AI folds. "
     elif lo_values.index(user_hand[2][0]) < lo_values.index(ai_hand[2][0]):
         ai_action = ai_third_street(ai_hand,user_hand[2],None)
-        print ai_action
+        if ai_action[0] == "B":
+            print "AI brings in for $30."
     else:
-        if user_hand[2][1]) > ai_hand[2][1]:
-            user_action = raw_input("b for bring in $30, c for complete to $100: ")
+        if user_hand[2][1] > ai_hand[2][1]:
+            pass
         elif user_hand[2][1] < ai_hand[2][1]:
-            ai_action = ai_third_street(ai_hand,user_hand[2],None) 
-            print ai_action
-
-    if user_action == "b":
-        print "User brings in for $30."
-    elif user_action == "c":
-        print "User completes for $100."
-
-    if ai_action == "": 
-        print ai_third_street(ai_hand,user_hand[2],None)
-
+            pass
 hu_razz()
