@@ -2,20 +2,13 @@
 
 from Tkinter import * 
 from random import randrange
-from equity_calculator import holdem_postflop_equity_calculator
+from equity_calculator import holdem_postflop_equity_calculator as hpec
+from math import fabs
 
 # Global Variables
 suits = ["s","h","d","c"]
 lo_values = ["A","2","3","4","5","6","7","8","9","T","J","Q","K"]
 deck = [value+suit for suit in suits for value in lo_values]
-
-def evaluate(answer,board,hand1,hand2):
-    if answer + 2 <= holdem_postflop_equity_calculator(board,hand1,hand2)[1]:
-        return "Correct"
-    elif answer - 2 <= holdem_postflop_equity_calculator(board,hand1,hand2)[1]:
-        return "Correct"
-    else:
-        return "Incorrect: " + str(holdem_postflop_equity_calculator(board,hand1,hand2)[1])
 
 def quiz():
     root = Tk()
@@ -23,6 +16,15 @@ def quiz():
     user_hand = []
     villain_hand = []
     flop = []
+
+    def callback():
+        answer = int(e.get())
+        actual = 100.0*hpec("".join(flop),"".join(user_hand),"".join(villain_hand))[1]
+        difference = answer - actual 
+        if fabs(answer - actual) <= 3:
+            Label(root,text="Correct: %s equity" % (actual)).grid(row=5,column=0)
+        else:
+            Label(root,text="Incorrect: %s equity" % (actual)).grid(row=5,column=0)
 
 
     while len(user_hand) < 2:
@@ -58,9 +60,10 @@ def quiz():
     Label(root,image=flop1).grid(row=3,column=1)
     Label(root,image=flop2).grid(row=3,column=2)
     Label(root,image=flop3).grid(row=3,column=3)
-    entryBox=Entry(root,width=20)
-    entryBox.grid(row=4, column=0,sticky=W)
-    entryBox.bind("<Return>",evaluate)
+    e=Entry(root,width=20)
+    e.grid(row=4, column=0)
+    e.focus_set()
+    b = Button(root, text="Submit", width=5, command=callback).grid(row=4,column=1)
     root.mainloop()
 
 quiz()
