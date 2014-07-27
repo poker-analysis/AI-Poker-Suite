@@ -185,17 +185,17 @@ def plo_evaluator(hand,board):
 
 
 def deuce_to_seven_evaluator(hand1,hand2):
-    if holdem_evaluator(hand1)[1] < holdem_evaluator(hand2)[1]:
-        return True
+    if holdem_evaluator(hand1)[1] > holdem_evaluator(hand2)[1]:
+        return False
     elif holdem_evaluator(hand1)[1] < holdem_evaluator(hand2)[1]:
-        return False        
+        return True
     else:
         if holdem_evaluator(hand1)[2] > holdem_evaluator(hand2)[2]:
-            return True
-        elif holdem_evaluator(hand1)[2] < holdem_evaluator(hand2)[2]:
             return False
+        elif holdem_evaluator(hand1)[2] < holdem_evaluator(hand2)[2]:
+            return True
         else:
-            return "Tie"
+            return Tie
 
 
 def o8_evaluator(hand,board):
@@ -273,10 +273,11 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
         else:
             if holdem_evaluator(x+user_hand)[2] > holdem_evaluator(x+cpu_hand)[2]:
                 user_wins += 1
-            elif holdem_evaluator(x+cpu_hand)[2] < holdem_evaluator(x+user_hand)[2]:
+            elif holdem_evaluator(x+user_hand)[2] < holdem_evaluator(x+cpu_hand)[2]:
                 cpu_wins += 1
             else:
                 ties+=1
+
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     return hand1,hand1_equity,hand2,hand2_equity
@@ -399,7 +400,7 @@ def stud_equity_calculator(query):
         else:
             if holdem_evaluator(user_hand)[2] > holdem_evaluator(cpu_hand)[2]:
                 user_wins += 1
-            elif holdem_evaluator(cpu_hand)[2] < holdem_evaluator(user_hand)[2]:
+            elif holdem_evaluator(user_hand)[2] < holdem_evaluator(cpu_hand)[2]:
                 cpu_wins += 1
             else:
                 ties+=1
