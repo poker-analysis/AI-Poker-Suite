@@ -90,11 +90,15 @@ def holdem_evaluator(total_board):
     # Two Pair
     if pairs.count(2) >= 2:
         hand_values = [i+2 for i, j in zip(count(), pairs) if j == 2][::-1][:2]
-        for x in xrange(12,-1,-1):
+        errored_vals = [values.index(card[0]) for card in total_board]
+        for x in sorted(errored_vals)[::-1]:
             if len(hand_values) == 3:
                 break
-            if pairs[x] == 1:
-                hand_values.append(x+2)
+            if hand_values.count(x) == 1:
+                pass
+            else:
+                hand_values.append(x)
+
         return "Two Pair", 2, hand_values[0] * 10000 + hand_values[1] * 100 + \
         hand_values[2] * 1
 
@@ -269,11 +273,13 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
         if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
             user_wins += 1
         elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
+            print x,user_hand,cpu_hand,"cpu",holdem_evaluator(cpu_hand+x)
             cpu_wins += 1
         else:
             if holdem_evaluator(x+user_hand)[2] > holdem_evaluator(x+cpu_hand)[2]:
                 user_wins += 1
             elif holdem_evaluator(x+user_hand)[2] < holdem_evaluator(x+cpu_hand)[2]:
+                print x,user_hand,cpu_hand,"cpu",holdem_evaluator(cpu_hand+x)
                 cpu_wins += 1
             else:
                 ties+=1
