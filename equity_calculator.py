@@ -273,13 +273,11 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
         if holdem_evaluator(x + user_hand)[1] > holdem_evaluator(x + cpu_hand)[1]:
             user_wins += 1
         elif holdem_evaluator(x + user_hand)[1] < holdem_evaluator(x + cpu_hand)[1]:
-            print x,user_hand,cpu_hand,"cpu",holdem_evaluator(cpu_hand+x)
             cpu_wins += 1
         else:
             if holdem_evaluator(x+user_hand)[2] > holdem_evaluator(x+cpu_hand)[2]:
                 user_wins += 1
             elif holdem_evaluator(x+user_hand)[2] < holdem_evaluator(x+cpu_hand)[2]:
-                print x,user_hand,cpu_hand,"cpu",holdem_evaluator(cpu_hand+x)
                 cpu_wins += 1
             else:
                 ties+=1
