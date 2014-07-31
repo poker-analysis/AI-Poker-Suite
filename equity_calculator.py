@@ -185,8 +185,41 @@ def razz_evaluator(hand1,hand2):
 
 
 def plo_evaluator(hand,board):
-    pass
+    # Useful Variables
+    hand_indices = sorted([values.index(card[0]) for card in hand])
+    board_indices = sorted([values.index(card[0]) for card in board])
+    flush_suit = ""
+    for suit in suits:
+        if "".join(board).count(suit) >= 3:
+            flush_suit = suit
+    trips = list(set([x for x in board if board.count(x) == 3]))
+    pairs = list(set([x for x in board if board.count(x) == 2]))
 
+    # Royal Flush
+    # Straight Flush
+    # Quads
+    if hand_indices.count(values.index(trips[0])) == 1:
+        return "Quads",7
+
+    for x in pairs:
+        if hand_indices.count(values.index(x[0])) == 2:
+            return "Quads",7
+
+    # Full House
+    # Flush
+    if "".join(hand).count(flush_suit) >= 2:
+        return "Flush",5
+
+    # Straight
+
+    # Trips
+    # Two Pair
+    # One Pair
+    
+    
+    # High card
+    else:
+        return "High Card", 0
 
 def deuce_to_seven_evaluator(hand1,hand2):
     if holdem_evaluator(hand1)[1] > holdem_evaluator(hand2)[1]:
