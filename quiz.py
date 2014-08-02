@@ -39,7 +39,6 @@ def quiz():
         Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
 
     def razz_solve():
-        # print razz_equity_calculator("Ah3hTsKd4c vs QdTdJsxx")
         global correct
         global incorrect 
 
@@ -52,11 +51,10 @@ def quiz():
         else:
             Label(root,text="Incorrect: %.2f equity" % (actual)).grid(row=5,column=0)
             incorrect += 1
-        Label(root,text="Correct: %s" % (correct)).grid(row=5,column=2)
-        Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
+        Label(root,text="Correct: %s" % (correct),background='grey95').grid(row=5,column=2)
+        Label(root,text="Incorrect: %s" % (incorrect),background='grey95').grid(row=5,column=3)
 
     def stud_solve():
-        # print razz_equity_calculator("Ah3hTsKd4c vs QdTdJsxx")
         global correct
         global incorrect 
 
@@ -69,8 +67,8 @@ def quiz():
         else:
             Label(root,text="Incorrect: %.2f equity" % (actual)).grid(row=5,column=0)
             incorrect += 1
-        Label(root,text="Correct: %s" % (correct)).grid(row=5,column=2)
-        Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
+        Label(root,text="Correct: %s" % (correct),background='grey95').grid(row=5,column=2)
+        Label(root,text="Incorrect: %s" % (incorrect),background='grey95').grid(row=5,column=3)
 
     def next():
         for child in root.winfo_children():
@@ -111,25 +109,25 @@ def quiz():
         flop2 = PhotoImage(file="./img/"+flop[1]+".gif")
         flop3 = PhotoImage(file="./img/"+flop[2]+".gif")
 
-        Label(root,text="Hero").grid(row=1,column=0)
-        Label(root,image=user_card).grid(row=1,column=1)
-        Label(root,image=user_card2).grid(row=1,column=2)
-        Label(root,text="Villain").grid(row=2,column=0)
-        Label(root,image=villain_card).grid(row=2,column=1)
-        Label(root,image=villain_card2).grid(row=2,column=2)
-        Label(root,text="Flop").grid(row=3,column=0)
-        Label(root,image=flop1).grid(row=3,column=1)
-        Label(root,image=flop2).grid(row=3,column=2)
-        Label(root,image=flop3).grid(row=3,column=3)
+        Label(root,text="Hero",background='grey95').grid(row=1,column=0)
+        Label(root,image=user_card,background='grey95').grid(row=1,column=1)
+        Label(root,image=user_card2,background='grey95').grid(row=1,column=2)
+        Label(root,text="Villain",background='grey95').grid(row=2,column=0)
+        Label(root,image=villain_card,background='grey95').grid(row=2,column=1)
+        Label(root,image=villain_card2,background='grey95').grid(row=2,column=2)
+        Label(root,text="Flop",background='grey95').grid(row=3,column=0)
+        Label(root,image=flop1,background='grey95').grid(row=3,column=1)
+        Label(root,image=flop2,background='grey95').grid(row=3,column=2)
+        Label(root,image=flop3,background='grey95').grid(row=3,column=3)
         e=Entry(root,width=15)
         e.grid(row=4, column=0)
         e.focus_set()
 
-        b = Button(root, text="Submit", width=5, command=holdem_solve).grid(row=4,column=1)
-        n = Button(root, text="Next", width=5, command=next).grid(row=4,column=2)
-        Label(root,text="Hold Em").grid(row=5,column=1)
-        Label(root,text="Correct: %s" % (correct)).grid(row=5,column=2)
-        Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
+        b = Button(root, text="Submit", width=5, command=holdem_solve,relief="flat").grid(row=4,column=1)
+        n = Button(root, text="Next", width=5, command=next,relief="flat").grid(row=4,column=2)
+        Label(root,text="Hold Em",background='grey95').grid(row=5,column=1)
+        Label(root,text="Correct: %s" % (correct),background='grey95').grid(row=5,column=2)
+        Label(root,text="Incorrect: %s" % (incorrect),background='grey95').grid(row=5,column=3)
         print user_hand,villain_hand,flop
         deck.extend(user_hand)
         deck.extend(villain_hand)
@@ -166,29 +164,29 @@ def quiz():
         villain_card2 = PhotoImage(file="./img/"+villain_hand[1]+".gif")
         villain_card3 = PhotoImage(file="./img/"+villain_hand[2]+".gif")
 
-        Label(root,text="Hero").grid(row=1,column=0)
-        Label(root,image=user_card).grid(row=1,column=1)
-        Label(root,image=user_card2).grid(row=1,column=2)
-        Label(root,image=user_card3).grid(row=1,column=3)
-        Label(root,image=user_card4).grid(row=1,column=4)
-        Label(root,image=user_card5).grid(row=1,column=5)
+        Label(root,text="Hero",background='grey95').grid(row=1,column=0)
+        Label(root,image=user_card,background='grey95').grid(row=1,column=1)
+        Label(root,image=user_card2,background='grey95').grid(row=1,column=2)
+        Label(root,image=user_card3,background='grey95').grid(row=1,column=3)
+        Label(root,image=user_card4,background='grey95').grid(row=1,column=4)
+        Label(root,image=user_card5,background='grey95').grid(row=1,column=5)
 
-        Label(root,text="Villain").grid(row=2,column=0)
-        Label(root,image=down_card).grid(row=2,column=1)
-        Label(root,image=down_card).grid(row=2,column=2)
-        Label(root,image=villain_card).grid(row=2,column=3)
-        Label(root,image=villain_card2).grid(row=2,column=4)
-        Label(root,image=villain_card3).grid(row=2,column=5)
+        Label(root,text="Villain",background='grey95').grid(row=2,column=0)
+        Label(root,image=down_card,background='grey95').grid(row=2,column=1)
+        Label(root,image=down_card,background='grey95').grid(row=2,column=2)
+        Label(root,image=villain_card,background='grey95').grid(row=2,column=3)
+        Label(root,image=villain_card2,background='grey95').grid(row=2,column=4)
+        Label(root,image=villain_card3,background='grey95').grid(row=2,column=5)
         
         e=Entry(root,width=15)
         e.grid(row=4, column=0)
         e.focus_set()
 
-        b = Button(root, text="Submit", width=5, command=razz_solve).grid(row=4,column=1)
-        n = Button(root, text="Next", width=5, command=next).grid(row=4,column=2)
-        Label(root,text="Razz").grid(row=5,column=1)
-        Label(root,text="Correct: %s" % (correct)).grid(row=5,column=2)
-        Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
+        b = Button(root, text="Submit", width=5, command=razz_solve,borderwidth=.001).grid(row=4,column=1)
+        n = Button(root, text="Next", width=5, command=next,borderwidth=.001).grid(row=4,column=2)
+        Label(root,text="Razz",background='grey95').grid(row=5,column=1)
+        Label(root,text="Correct: %s" % (correct),background='grey95').grid(row=5,column=2)
+        Label(root,text="Incorrect: %s" % (incorrect),background='grey95').grid(row=5,column=3)
         
         print user_hand,villain_hand
         deck.extend(user_hand)
@@ -224,29 +222,29 @@ def quiz():
         villain_card2 = PhotoImage(file="./img/"+villain_hand[1]+".gif")
         villain_card3 = PhotoImage(file="./img/"+villain_hand[2]+".gif")
 
-        Label(root,text="Hero").grid(row=1,column=0)
-        Label(root,image=user_card).grid(row=1,column=1)
-        Label(root,image=user_card2).grid(row=1,column=2)
-        Label(root,image=user_card3).grid(row=1,column=3)
-        Label(root,image=user_card4).grid(row=1,column=4)
-        Label(root,image=user_card5).grid(row=1,column=5)
+        Label(root,text="Hero",background='grey95').grid(row=1,column=0)
+        Label(root,image=user_card,background='grey95').grid(row=1,column=1)
+        Label(root,image=user_card2,background='grey95').grid(row=1,column=2)
+        Label(root,image=user_card3,background='grey95').grid(row=1,column=3)
+        Label(root,image=user_card4,background='grey95').grid(row=1,column=4)
+        Label(root,image=user_card5,background='grey95').grid(row=1,column=5)
 
-        Label(root,text="Villain").grid(row=2,column=0)
-        Label(root,image=down_card).grid(row=2,column=1)
-        Label(root,image=down_card).grid(row=2,column=2)
-        Label(root,image=villain_card).grid(row=2,column=3)
-        Label(root,image=villain_card2).grid(row=2,column=4)
-        Label(root,image=villain_card3).grid(row=2,column=5)
+        Label(root,text="Villain",background='grey95').grid(row=2,column=0)
+        Label(root,image=down_card,background='grey95').grid(row=2,column=1)
+        Label(root,image=down_card,background='grey95').grid(row=2,column=2)
+        Label(root,image=villain_card,background='grey95').grid(row=2,column=3)
+        Label(root,image=villain_card2,background='grey95').grid(row=2,column=4)
+        Label(root,image=villain_card3,background='grey95').grid(row=2,column=5)
         
         e=Entry(root,width=15)
         e.grid(row=4, column=0)
         e.focus_set()
 
-        b = Button(root, text="Submit", width=5, command=stud_solve).grid(row=4,column=1)
-        n = Button(root, text="Next", width=5, command=next).grid(row=4,column=2)
-        Label(root,text="Stud Hi").grid(row=5,column=1)
-        Label(root,text="Correct: %s" % (correct)).grid(row=5,column=2)
-        Label(root,text="Incorrect: %s" % (incorrect)).grid(row=5,column=3)
+        b = Button(root, text="Submit", width=5, command=stud_solve,borderwidth=.001).grid(row=4,column=1)
+        n = Button(root, text="Next", width=5, command=next,borderwidth=.001).grid(row=4,column=2)
+        Label(root,text="Stud Hi",background='grey95').grid(row=5,column=1)
+        Label(root,text="Correct: %s" % (correct),background='grey95').grid(row=5,column=2)
+        Label(root,text="Incorrect: %s" % (incorrect),background='grey95').grid(row=5,column=3)
         
         print user_hand,villain_hand
         deck.extend(user_hand)
