@@ -4,11 +4,15 @@ from collections import Counter
 from random import randrange
 import time 
 
-# Issues: 
-# Tiebreak of hold em high card hands
+# To Do: 
 # Omaha Evaluator
+# Omaha HU Calculator
+# Omaha Multiway Calculator
 # O8 Evaluator
-# 2-7 Evaluator
+# Stud8 Evaluator
+# Rewrite HoldEm in C++
+# Rewrite Razz in C++ 
+# Rewrite Stud in C++
 
 suits = ["s","h","d","c"]
 values = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"]
@@ -192,34 +196,74 @@ def plo_evaluator(hand,board):
     for suit in suits:
         if "".join(board).count(suit) >= 3:
             flush_suit = suit
-    trips = list(set([x for x in board if board.count(x) == 3]))
-    pairs = list(set([x for x in board if board.count(x) == 2]))
+    trips = list(set([ind for ind in board_indices if board_indices.count(ind) == 3]))
+    pairs = list(set([ind for ind in board_indices if board_indices.count(ind) == 2]))
+    ppair = list(set([ind for ind in hand_indices if hand_indices.count(ind) == 2]))
+
+    if len(trips) == 3:
+        trips = trips[0]
 
     # Royal Flush
+
     # Straight Flush
     # Quads
-    if hand_indices.count(values.index(trips[0])) == 1:
+    if hand_indices.count(trips) == 1:
         return "Quads",7
 
     for x in pairs:
-        if hand_indices.count(values.index(x[0])) == 2:
+        if hand_indices.count(x) == 2:
             return "Quads",7
 
     # Full House
+    if len(trips) == 0 and len(pairs) == 1:
+        pass
+    elif len(trips) == 0 and len(pairs) == 2:
+        pass
+    elif len(trips) == 1 and len(pairs) == 0:
+        pass
+    elif len(trips) == 1 and len(pairs) == 1:
+        pass
+
     # Flush
     if "".join(hand).count(flush_suit) >= 2:
         return "Flush",5
 
     # Straight
 
+
     # Trips
-    # Two Pair
-    # One Pair
-    
+    if len(trips) == 1:
+        return "Trips",4
+    else:
+        max_pair = 0
+        for x in ppair:
+            if board_indices.count(x) == 1:
+                max_pair = max(x,max_pair)
+
+    # Two Pair + One Pair
+    if len(pairs) == 2:
+        pass
+    elif len(pairs) == 1:
+        pass
+    elif len(pairs) == 0:
+        pass
     
     # High card
     else:
         return "High Card", 0
+
+
+def o8_evaluator(hand,board):
+    pass
+
+
+def plo_headsup_equity_calculator(hero,villain):
+    pass
+
+
+def plo_multiway_equity_calculator(hero,villain,villain2):
+    pass
+
 
 def deuce_to_seven_evaluator(hand1,hand2):
     if holdem_evaluator(hand1)[1] > holdem_evaluator(hand2)[1]:
@@ -233,10 +277,6 @@ def deuce_to_seven_evaluator(hand1,hand2):
             return True
         else:
             return Tie
-
-
-def o8_evaluator(hand,board):
-    pass
 
 
 def holdem_preflop_equity_calculator(hand1,hand2):
@@ -321,10 +361,6 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
  
 
 def razz_equity_calculator(query):
-    # Supported Expanded Queries:
-    # 1) x-syntax; xKh2h will test your range against this range
-    # 2) Weighted Range: range against different hands with different weights
-    #    Example: Ah2h3h vs 30 4h5h6h 30 6h7h8h 30 Th2h3h
 
     query = query.split()
 
@@ -385,6 +421,7 @@ def razz_equity_calculator(query):
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     return query[0],hand1_equity,query[2],hand2_equity
+
 
 def stud_equity_calculator(query):
     query = query.split()
