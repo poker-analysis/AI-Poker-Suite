@@ -117,7 +117,7 @@ class PokerTempo:
 
     def reset(self,widget,event,data=None):
         self.window.remove(self.table)
-        print list(self.window)
+        print self.window.clear
 
     def holdem_solve(self, widget, callback_data=None):
         answer = int(self.entry.get_text())

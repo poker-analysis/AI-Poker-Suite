@@ -94,7 +94,7 @@ def holdem_evaluator(total_board):
     # Two Pair
     if pairs.count(2) >= 2:
         hand_values = [i+2 for i, j in zip(count(), pairs) if j == 2][::-1][:2]
-        errored_vals = [values.index(card[0]) for card in total_board]
+        errored_vals = [values.index(card[0])+2 for card in total_board]
         for x in sorted(errored_vals)[::-1]:
             if len(hand_values) == 3:
                 break
@@ -188,77 +188,62 @@ def razz_evaluator(hand1,hand2):
         return "Tie"
 
 
-def plo_evaluator(hand,board):
-    # Useful Variables
-    hand_indices = sorted([values.index(card[0]) for card in hand])
-    board_indices = sorted([values.index(card[0]) for card in board])
-    flush_suit = ""
-    for suit in suits:
-        if "".join(board).count(suit) >= 3:
-            flush_suit = suit
-    trips = list(set([ind for ind in board_indices if board_indices.count(ind) == 3]))
-    pairs = list(set([ind for ind in board_indices if board_indices.count(ind) == 2]))
-    ppair = list(set([ind for ind in hand_indices if hand_indices.count(ind) == 2]))
-
-    if len(trips) == 3:
-        trips = trips[0]
-
-    # Royal Flush
-
-    # Straight Flush
-    # Quads
-    if hand_indices.count(trips) == 1:
-        return "Quads",7
-
-    for x in pairs:
-        if hand_indices.count(x) == 2:
-            return "Quads",7
-
-    # Full House
-    if len(trips) == 0 and len(pairs) == 1:
-        pass
-    elif len(trips) == 0 and len(pairs) == 2:
-        pass
-    elif len(trips) == 1 and len(pairs) == 0:
-        pass
-    elif len(trips) == 1 and len(pairs) == 1:
-        pass
-
-    # Flush
-    if "".join(hand).count(flush_suit) >= 2:
-        return "Flush",5
-
-    # Straight
-
-
-    # Trips
-    if len(trips) == 1:
-        return "Trips",4
-    else:
-        max_pair = 0
-        for x in ppair:
-            if board_indices.count(x) == 1:
-                max_pair = max(x,max_pair)
-
-    # Two Pair + One Pair
-    if len(pairs) == 2:
-        pass
-    elif len(pairs) == 1:
-        pass
-    elif len(pairs) == 0:
-        pass
-    
-    # High card
-    else:
-        return "High Card", 0
+def omaha_evaluator(hand,board):
+    # Brute force omaha evaluator for testing (hand,board = arrays)
+    start = time.time()
+    max_rank = -1
+    answer = "     "
+    boards = list(combinations(board,3))
+    hands = list(combinations(hand,2))
+    for a in boards:
+        for b in hands:
+            if holdem_evaluator(a+b)[1] > max_rank:
+                max_rank = holdem_evaluator(a+b)[1]
+                answer = holdem_evaluator(a+b)
+            elif holdem_evaluator(a+b)[1] == max_rank:
+                if holdem_evaluator(a+b)[2] > answer[2]:
+                    max_rank = holdem_evaluator(a+b)[1]
+                    answer = holdem_evaluator(a+b)
+    elapsed = time.time() - start 
+    return answer
 
 
 def o8_evaluator(hand,board):
     pass
 
 
-def plo_headsup_equity_calculator(hero,villain):
-    pass
+def omaha_headsup_flop_equity_calculator(hero,villain,board):
+    user_wins = 0
+    cpu_wins = 0
+    ties = 0
+    
+    deck = [value+suit for suit in suits for value in values]
+
+    for card in hero:
+        deck.remove(card)
+    for card in villain:
+        deck.remove(card)
+    for card in board:
+        deck.remove(card)
+    
+    combos = list(combinations(deck,5 - len(board)))
+    for x in combos:
+        draws = list(x)
+        if omaha_evaluator(hero,board+draws)[1] > omaha_evaluator(villain,board+draws)[1]:
+            user_wins += 1
+        elif omaha_evaluator(hero,board+draws)[1] < omaha_evaluator(villain,board+draws)[1]:
+            cpu_wins += 1
+        else:
+            if omaha_evaluator(hero,board+draws)[2] > omaha_evaluator(villain,board+draws)[2]:
+                user_wins += 1
+            elif omaha_evaluator(hero,board+draws)[2] < omaha_evaluator(villain,board+draws)[2]:
+                cpu_wins += 1
+            else:
+                ties+=1
+
+    hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
+    return hero,hand1_equity,villain,hand2_equity,user_wins,cpu_wins,ties 
 
 
 def plo_multiway_equity_calculator(hero,villain,villain2):
@@ -357,7 +342,7 @@ def holdem_postflop_equity_calculator(board,hand1,hand2):
 
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
-    return hand1,hand1_equity,hand2,hand2_equity
+    return hand1,hand1_equity,hand2,hand2_equity,user_wins,cpu_wins,ties
  
 
 def razz_equity_calculator(query):
@@ -489,3 +474,5 @@ def stud_equity_calculator(query):
     hand1_equity = ((user_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     hand2_equity = ((cpu_wins+ties/2.0)/(user_wins+ties+cpu_wins))
     return query[0],hand1_equity,query[2],hand2_equity
+
+print omaha_headsup_flop_equity_calculator(["Kd","Qd","2c","2s"],["Qh","Jc","Tc","9s"],['Jd', 'Ts', '9d'])

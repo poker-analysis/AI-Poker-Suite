@@ -1,0 +1,29 @@
+HoldEm
+x Easy Flop (easy equity)
+o Easy Flop (easy weights)
+o Medium Flop (medium weights)
+o Hard Flop (hard weights)
+
+Omaha
+o Easy Flop (easy equity)
+o Easy Flop (easy weights)
+o Medium Flop (medium weights)
+o Hard Flop (hard weights)
+
+Omaha8
+o Easy Flop (easy equity)
+o Easy Flop (easy weights)
+o Medium Flop (medium weights)
+o Hard Flop (hard weights)
+
+Razz
+x Easy Razz (easy equity)
+o Easy Razz (easy weights)
+o Medium Razz (medium weights)
+o Hard Razz (hard weights)
+
+Stud
+x Easy Stud (easy equity)
+
+Stud8
+o Easy Stud8 (easy equity)
