@@ -8,38 +8,53 @@
 #include <string>
 #include <algorithm>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
-char suits[] = {'c','h','d','s'};
-char values[] = {'2','3','4','5','6','7','8','9','T','J','Q','K','A'};
+string suits = "cdhs";
+string values = "23456789TJQKA";
 
-string flushsuit(string totalboard)
+char flushSuit(string totalboard)
 {	
-	// Suit Counter
+	// Suit Retrieval
 	for (int i=0; i<4;i++){
 		size_t suit = count(totalboard.begin(), totalboard.end(), suits[i]);
-		if (suit>=5){
-			stringstream ss; string s; char c = suits[i];
-			ss << c; ss >> s;
-			return s;
+		if (suit >= 5){
+			return suits[i];
 		}
 	}
-	return "";	
+	return ' ';
 }
 
-string holdem_evaluate(string totalboard)
+void flushValues(string totalboard)
+{
+	vector<char> v;
+	char flSuit = flushSuit(totalboard);
+	// Grab Flush Cards
+
+	if (flSuit != ' '){
+		for (int x = 0; x<14; x++){
+			if (totalboard[x+1] == flSuit){
+				v.push_back(totalboard[x]);
+			}
+		}
+	}
+	for (int i=0;i<v.size();i++){
+		cout << v.at(i);
+	}
+}
+
+int holdemEvaluate(string totalboard)
 {
 	// Flush
-	if (flushsuit(totalboard) != ""){
-		return "Flush";
+	if (flushSuit(totalboard) != ' '){
+		return 6;
 	}
-	else {
-		return "";
-	}
+	return 0;
 }
 
 int main()
 {
-	cout << holdem_evaluate("AhKhQhThJh7h3c") << "\n";
+	cout << holdemEvaluate("Ah2h3h4h5h6d7h");
 }
